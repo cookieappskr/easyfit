@@ -1,87 +1,273 @@
-# Welcome to React Router!
+# Easy Fit Admin
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Easy Fit의 관리자 대시보드를 위한 풀스택 웹 애플리케이션입니다.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## 🚀 기술 스택
 
-## Features
+- **프레임워크**: [React Router 7](https://reactrouter.com/) (App Router)
+- **언어**: TypeScript
+- **스타일링**: Tailwind CSS v4
+- **UI 컴포넌트**: Radix UI, Shadcn UI
+- **인증**: Supabase Auth
+- **데이터베이스**: PostgreSQL (Supabase)
+- **ORM**: Drizzle ORM
+- **빌드 도구**: Vite
+- **날짜/시간**: Luxon
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## 📋 주요 기능
 
-## Getting Started
+- 🔐 사용자 인증 및 권한 관리
+- 👥 사용자 관리
+- 📁 카테고리 관리
+- 🎨 반응형 디자인
+- 🌐 한국어 지원 (기본 로케일: ko-KR, 타임존: Asia/Seoul)
 
-### Installation
+## 🛠️ 시작하기
 
-Install the dependencies:
+### 필수 요구사항
+
+- Node.js 20 이상
+- npm 또는 yarn
+- Supabase 프로젝트
+
+### 설치
+
+1. 저장소 클론:
+
+```bash
+git clone <repository-url>
+cd easy-fit-admin
+```
+
+2. 의존성 설치:
 
 ```bash
 npm install
 ```
 
-### Development
+3. 환경 변수 설정:
 
-Start the development server with HMR:
+`.env` 파일을 생성하고 다음 환경 변수를 설정하세요:
+
+```env
+# Supabase 설정
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# 데이터베이스 연결 (Drizzle 마이그레이션용)
+DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres
+```
+
+Supabase 연결 문자열은 Supabase 대시보드의 **Settings → Database**에서 확인할 수 있습니다.
+
+### 개발 서버 실행
 
 ```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+개발 서버는 `http://localhost:5173`에서 실행됩니다.
 
-## Building for Production
+## 📜 사용 가능한 스크립트
 
-Create a production build:
+### 개발
+
+```bash
+npm run dev          # 개발 서버 시작 (HMR 지원)
+npm run typecheck    # TypeScript 타입 체크 및 React Router 타입 생성
+```
+
+### 빌드
+
+```bash
+npm run build        # 프로덕션 빌드 생성
+npm start            # 프로덕션 서버 실행
+```
+
+### 데이터베이스
+
+```bash
+npm run db:generate  # Drizzle 마이그레이션 파일 생성
+npm run db:migrate   # 데이터베이스에 마이그레이션 적용
+npm run db:studio    # Drizzle Studio 실행 (데이터베이스 GUI)
+npm run db:typegen   # Supabase 타입 생성 (database.types.ts)
+```
+
+## 📁 프로젝트 구조
+
+```
+easy-fit-admin/
+├── app/
+│   ├── api/                    # API 라우트
+│   ├── common/                 # 공통 컴포넌트 및 설정
+│   │   ├── components/         # 재사용 가능한 컴포넌트
+│   │   │   ├── core/           # 기본 UI 컴포넌트 (Shadcn UI)
+│   │   │   └── ...
+│   │   └── config/             # 설정 파일 (폰트 등)
+│   ├── features/               # 기능별 모듈
+│   │   ├── auth/               # 인증 관련
+│   │   ├── categories/         # 카테고리 관리
+│   │   └── users/               # 사용자 관리
+│   ├── hooks/                  # 커스텀 훅
+│   ├── lib/                    # 유틸리티 함수
+│   ├── routes/                 # 라우트 페이지
+│   ├── sql/                    # 데이터베이스 마이그레이션
+│   ├── app.css                 # 전역 스타일
+│   ├── db.ts                   # Drizzle 데이터베이스 클라이언트
+│   ├── root.tsx                # 루트 레이아웃
+│   ├── routes.ts               # 라우트 설정
+│   └── supa-client.ts          # Supabase 클라이언트 설정
+├── public/                     # 정적 파일
+├── drizzle.config.ts           # Drizzle 설정
+├── react-router.config.ts      # React Router 설정
+├── vite.config.ts              # Vite 설정
+└── tsconfig.json               # TypeScript 설정
+```
+
+## 🎨 디자인 시스템
+
+### 폰트
+
+프로젝트는 확장 가능한 폰트 시스템을 사용합니다:
+
+- **본문 폰트**: Inter
+- **타이틀 폰트**: Black Han Sans
+
+폰트 설정은 `app/common/config/fonts.ts`에서 관리됩니다.
+
+### 타이틀 스타일
+
+CSS 클래스를 사용하여 타이틀 스타일을 적용할 수 있습니다:
+
+```tsx
+<h1 className="title1">메인 타이틀</h1>
+<h2 className="title2">서브 타이틀</h2>
+<h3 className="title3">섹션 타이틀</h3>
+```
+
+사용 가능한 클래스:
+- `title0` - 가장 큰 타이틀 (Display)
+- `title1` - H1 크기
+- `title2` - H2 크기
+- `title3` - H3 크기
+- `title4` - H4 크기
+- `title5` - H5 크기
+- `title6` - H6 크기
+
+모든 타이틀 클래스는 반응형이며 Black Han Sans 폰트를 사용합니다.
+
+## 🔐 인증
+
+애플리케이션은 Supabase Auth를 사용하여 인증을 처리합니다:
+
+- 로그인: `/auth/login`
+- 프로필 업데이트: `/auth/update-profile`
+
+인증 상태는 `app/root.tsx`의 loader에서 확인되며, 모든 페이지에서 사용할 수 있습니다.
+
+## 🗄️ 데이터베이스
+
+### 스키마
+
+데이터베이스 스키마는 `app/features/**/schema.ts` 파일에 정의되어 있습니다.
+
+### 마이그레이션
+
+1. 스키마 변경 후 마이그레이션 파일 생성:
+
+```bash
+npm run db:generate
+```
+
+2. 데이터베이스에 마이그레이션 적용:
+
+```bash
+npm run db:migrate
+```
+
+**주의**: `db:migrate` 실행 전에 `.env` 파일에 올바른 `DATABASE_URL`이 설정되어 있어야 합니다.
+
+### Supabase 타입 생성
+
+Supabase 데이터베이스 타입을 생성하려면:
+
+```bash
+npm run db:typegen
+```
+
+이 명령어는 `database.types.ts` 파일을 생성합니다.
+
+## 🚢 배포
+
+### Docker를 사용한 배포
+
+```bash
+docker build -t easy-fit-admin .
+docker run -p 3000:3000 easy-fit-admin
+```
+
+### 프로덕션 빌드
 
 ```bash
 npm run build
+npm start
 ```
 
-## Deployment
+빌드 결과물:
+```
+build/
+├── client/    # 정적 자산
+└── server/    # 서버 사이드 코드
+```
 
-### Docker Deployment
+## 📝 라우트
 
-To build and run using Docker:
+- `/` - 홈 페이지
+- `/users` - 사용자 목록
+- `/users/:id` - 사용자 상세
+- `/categories` - 카테고리 목록
+- `/categories/:id` - 카테고리 상세
+- `/categories/new` - 새 카테고리 생성
+- `/auth/login` - 로그인
+- `/auth/update-profile` - 프로필 업데이트
+
+## 🛠️ 개발 가이드
+
+### 새 기능 추가
+
+1. `app/features/` 디렉토리에 새 기능 폴더 생성
+2. `schema.ts`에 데이터베이스 스키마 정의
+3. `pages/` 디렉토리에 페이지 컴포넌트 생성
+4. `app/routes.ts`에 라우트 추가
+
+### 새 폰트 추가
+
+1. `app/common/config/fonts.ts`에 폰트 정보 추가
+2. `app/app.css`의 `@theme`에 CSS 변수 추가
+3. `root.tsx`의 `createFontLinks()`가 자동으로 폰트 링크 생성
+
+## 🐛 문제 해결
+
+### 데이터베이스 연결 에러
+
+`getaddrinfo ENOTFOUND` 에러가 발생하는 경우:
+
+1. `.env` 파일에 `DATABASE_URL`이 올바르게 설정되어 있는지 확인
+2. Supabase 프로젝트가 활성화되어 있는지 확인
+3. 네트워크 연결 상태 확인
+
+### 타입 에러
+
+`database.types.ts` 파일이 없는 경우:
 
 ```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+npm run db:typegen
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+## 📄 라이선스
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+이 프로젝트는 비공개 프로젝트입니다.
 
 ---
 
-Built with ❤️ using React Router.
+Built with ❤️ using React Router 7, Supabase, and Drizzle ORM.
