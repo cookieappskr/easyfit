@@ -17,9 +17,11 @@ export type Database = MergeDeep<
   }
 >;
 
+// 클라이언트 사이드에서는 import.meta.env 사용 (Vite 환경 변수)
+// VITE_ 접두사가 붙은 환경 변수만 클라이언트에 노출됨
 export const browserClient = createBrowserClient<Database>(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
+  import.meta.env.VITE_SUPABASE_URL!,
+  import.meta.env.VITE_SUPABASE_ANON_KEY!
 );
 
 export const makeSSRClient = (request: Request) => {

@@ -1,6 +1,7 @@
 import {
   bigint,
   boolean,
+  integer,
   jsonb,
   pgEnum,
   pgSchema,
@@ -18,6 +19,7 @@ export const users = pgSchema("auth").table("users", {
 });
 
 export const role_types = pgEnum("role_types", ["admin", "user", "other"]);
+export const gender_types = pgEnum("gender_types", ["male", "female"]);
 
 export const profiles = pgTable("profiles", {
   id: uuid()
@@ -26,6 +28,10 @@ export const profiles = pgTable("profiles", {
   avatar: text(),
   nickname: text().notNull(),
   email: text().notNull(),
+  gender: gender_types(),
+  birth_year: integer(),
+  height: integer(), // cm 단위 (정수만)
+  weight: integer(), // kg 단위 (정수만)
   role: role_types().default("user"),
   created_at: timestamp().notNull().defaultNow(),
   updated_at: timestamp().notNull().defaultNow(),

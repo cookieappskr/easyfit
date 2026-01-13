@@ -61,8 +61,14 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
     data: { user },
   } = await client.auth.getUser();
   if (user) {
-    const profile = await getUserById(client, user.id);
-    return { user, profile };
+    try {
+      const profile = await getUserById(client, user.id);
+      return { user, profile };
+    } catch (error) {
+      // 프로필이 없는 경우 null 반환
+      console.error("Failed to get user profile:", error);
+      return { user, profile: null };
+    }
   }
   return { user: null, profile: null };
 };
@@ -80,21 +86,28 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const isAdmin = isAuthenticated && profile?.role === "admin";
 
   // 레이아웃 영역
+  const isAuthPage = pathname.includes("/auth");
+
   return (
     <div
-      className={cn({
-        "py-28 px-20": !pathname.includes("/auth"),
+      className={cn("bg-amber-50 h-screen", {
         "opacity-50": isLoading,
       })}
     >
-      {pathname.includes("/auth") ? null : (
+      {!isAuthPage && (
         <Navigation
           isAuthenticated={isAuthenticated}
           isAdmin={isAdmin}
           profile={profile}
         />
       )}
-      <Outlet context={{ isAuthenticated, isAdmin, profile }} />
+      <div
+        className={cn({
+          "pt-28 px-20": !isAuthPage,
+        })}
+      >
+        <Outlet context={{ isAuthenticated, isAdmin, profile }} />
+      </div>
     </div>
   );
 }

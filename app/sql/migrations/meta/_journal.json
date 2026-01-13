@@ -15,6 +15,13 @@
       "when": 1768134057442,
       "tag": "0001_cheerful_ben_urich",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768309619167,
+      "tag": "0002_concerned_mauler",
+      "breakpoints": true
     }
   ]
 }

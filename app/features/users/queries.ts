@@ -3,14 +3,14 @@ import { redirect } from "react-router";
 import { type Database } from "~/supa-client";
 
 // User정보 확인
-export const getUserByUsername = async (
+export const getUserByNickname = async (
   client: SupabaseClient<Database>,
-  username: string
+  nickname: string
 ) => {
   const { data, error } = await client
     .from("profiles")
     .select("*")
-    .eq("username", username)
+    .eq("nickname", nickname)
     .single();
   if (error) {
     console.error(error);
@@ -28,13 +28,13 @@ export const getUserById = async (
     .select(
       `
         id,
-        name,
-        username,
-        avatar
+        nickname,
+        avatar,
+        role
     `
     )
     .eq("id", id)
-    .single();
+    .maybeSingle();
   if (error) {
     console.error(error);
     throw new Error(error.message);

@@ -47,30 +47,42 @@ export type Database = {
       profiles: {
         Row: {
           avatar: string | null
+          birth_year: number | null
           created_at: string
           email: string
+          gender: Database["public"]["Enums"]["gender_types"] | null
+          height: number | null
           id: string
           nickname: string
           role: Database["public"]["Enums"]["role_types"] | null
           updated_at: string
+          weight: number | null
         }
         Insert: {
           avatar?: string | null
+          birth_year?: number | null
           created_at?: string
           email: string
+          gender?: Database["public"]["Enums"]["gender_types"] | null
+          height?: number | null
           id: string
           nickname: string
           role?: Database["public"]["Enums"]["role_types"] | null
           updated_at?: string
+          weight?: number | null
         }
         Update: {
           avatar?: string | null
+          birth_year?: number | null
           created_at?: string
           email?: string
+          gender?: Database["public"]["Enums"]["gender_types"] | null
+          height?: number | null
           id?: string
           nickname?: string
           role?: Database["public"]["Enums"]["role_types"] | null
           updated_at?: string
+          weight?: number | null
         }
         Relationships: []
       }
@@ -83,6 +95,7 @@ export type Database = {
     }
     Enums: {
       category_types: "exercise" | "program" | "user" | "other"
+      gender_types: "male" | "female"
       role_types: "admin" | "user" | "other"
     }
     CompositeTypes: {
@@ -212,6 +225,7 @@ export const Constants = {
   public: {
     Enums: {
       category_types: ["exercise", "program", "user", "other"],
+      gender_types: ["male", "female"],
       role_types: ["admin", "user", "other"],
     },
   },
