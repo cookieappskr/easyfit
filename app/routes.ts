@@ -12,11 +12,7 @@ export default [
     index("features/users/pages/index-page.tsx"),
     route("/:id", "features/users/pages/detail-page.tsx"),
   ]),
-  ...prefix("categories", [
-    index("features/categories/pages/index-page.tsx"),
-    route("/:id", "features/categories/pages/detail-page.tsx"),
-    route("/new", "features/categories/pages/new-page.tsx"),
-  ]),
+  ...prefix("categories", [index("features/categories/pages/index-page.tsx")]),
   ...prefix("auth", [
     layout("features/auth/layouts/base-layout.tsx", [
       route("/login", "features/auth/pages/login-page.tsx"),

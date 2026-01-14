@@ -16,30 +16,42 @@ export type Database = {
     Tables: {
       categories: {
         Row: {
+          additional_attribute1: string | null
+          additional_attribute2: string | null
+          code: string
           created_at: string
-          description: string
+          description: string | null
+          display_order: number
           id: number
           is_active: boolean
           name: string
-          type: Database["public"]["Enums"]["category_types"]
+          parent_id: number | null
           updated_at: string
         }
         Insert: {
+          additional_attribute1?: string | null
+          additional_attribute2?: string | null
+          code: string
           created_at?: string
-          description: string
+          description?: string | null
+          display_order?: number
           id?: never
           is_active?: boolean
           name: string
-          type: Database["public"]["Enums"]["category_types"]
+          parent_id?: number | null
           updated_at?: string
         }
         Update: {
+          additional_attribute1?: string | null
+          additional_attribute2?: string | null
+          code?: string
           created_at?: string
-          description?: string
+          description?: string | null
+          display_order?: number
           id?: never
           is_active?: boolean
           name?: string
-          type?: Database["public"]["Enums"]["category_types"]
+          parent_id?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -94,7 +106,6 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      category_types: "exercise" | "program" | "user" | "other"
       gender_types: "male" | "female"
       role_types: "admin" | "user" | "other"
     }
@@ -224,7 +235,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      category_types: ["exercise", "program", "user", "other"],
       gender_types: ["male", "female"],
       role_types: ["admin", "user", "other"],
     },

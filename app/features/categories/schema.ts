@@ -2,6 +2,7 @@ import {
   bigint,
   boolean,
   check,
+  integer,
   pgEnum,
   pgTable,
   text,
@@ -9,23 +10,19 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-// 타입 설정부
-import { CATEGORY_TYPES } from "./constants";
-
-export const category_types = pgEnum(
-  "category_types",
-  CATEGORY_TYPES.map((type) => type.value) as [string, ...string[]]
-);
-
 // 카테고리 테이블 설정부
 export const categories = pgTable(
   "categories",
   {
     id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
-    type: category_types().notNull(),
-    name: text().notNull(),
-    description: text().notNull(),
-    is_active: boolean().notNull().default(true),
+    parent_id: bigint({ mode: "number" }),
+    name: text().notNull(), // 유형명
+    code: text().notNull(), // 유형코드
+    display_order: integer().notNull().default(0), // 표시순서
+    additional_attribute1: text(), // 부가속성1
+    additional_attribute2: text(), // 부가속성2
+    description: text(), // 설명 (선택사항)
+    is_active: boolean().notNull().default(true), // 사용여부
     created_at: timestamp().notNull().defaultNow(),
     updated_at: timestamp().notNull().defaultNow(),
   },
@@ -35,8 +32,8 @@ export const categories = pgTable(
       sql`LENGTH(${table.name}) >= 1 AND LENGTH(${table.name}) <= 50`
     ),
     check(
-      "description_length_check",
-      sql`LENGTH(${table.description}) >= 1 AND LENGTH(${table.description}) <= 200`
+      "code_length_check",
+      sql`LENGTH(${table.code}) >= 1 AND LENGTH(${table.code}) <= 50`
     ),
   ]
 );
