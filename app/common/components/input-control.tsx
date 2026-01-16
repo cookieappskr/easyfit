@@ -2,6 +2,7 @@ import * as React from "react";
 import { Label } from "~/common/components/core/label";
 import { Input } from "~/common/components/core/input";
 import { Switch } from "~/common/components/core/switch";
+import { Textarea } from "~/common/components/core/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -34,11 +35,15 @@ interface InputControlProps {
   /**
    * 입력 타입 (text, number, switch)
    */
-  type?: "text" | "number" | "switch";
+  type?: "text" | "number" | "switch" | "textarea";
   /**
    * Input props
    */
   inputProps?: React.ComponentProps<typeof Input>;
+  /**
+   * Textarea props (type이 textarea일 때)
+   */
+  textareaProps?: React.ComponentProps<typeof Textarea>;
   /**
    * Switch props (type이 switch일 때)
    */
@@ -47,6 +52,10 @@ interface InputControlProps {
    * Switch 레이블 (type이 switch일 때)
    */
   switchLabel?: { checked: string; unchecked: string };
+  /**
+   * 커스텀 입력 컴포넌트
+   */
+  children?: React.ReactNode;
 }
 
 /**
@@ -62,10 +71,13 @@ export default function InputControl({
   required = false,
   type = "text",
   inputProps,
+  textareaProps,
   switchProps,
   switchLabel,
+  children,
 }: InputControlProps) {
   const isSwitch = type === "switch";
+  const isTextarea = type === "textarea";
 
   return (
     <div className="space-y-2">
@@ -96,7 +108,9 @@ export default function InputControl({
         )}
       </div>
 
-      {isSwitch ? (
+      {children ? (
+        children
+      ) : isSwitch ? (
         <div className="flex items-center gap-3">
           <Switch id={id} {...switchProps} />
           {switchLabel && (
@@ -110,6 +124,13 @@ export default function InputControl({
             </Label>
           )}
         </div>
+      ) : isTextarea ? (
+        <Textarea
+          id={id}
+          aria-invalid={error ? "true" : "false"}
+          aria-describedby={error ? `${id}-error` : undefined}
+          {...textareaProps}
+        />
       ) : (
         <Input
           id={id}
