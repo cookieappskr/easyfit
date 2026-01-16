@@ -48,7 +48,9 @@ export default function IndexPage() {
     additionalAttribute2: "",
     isActive: true,
   });
-  const [formErrors, setFormErrors] = React.useState<Record<string, string>>({});
+  const [formErrors, setFormErrors] = React.useState<Record<string, string>>(
+    {}
+  );
 
   // 카테고리 선택 핸들러
   const handleSelectCategory = (category: CategoryWithChildren) => {
@@ -83,7 +85,9 @@ export default function IndexPage() {
     if (!selectedCategory) {
       const maxOrder =
         categories.length > 0
-          ? Math.max(...categories.map((cat) => (cat as any).display_order || 0))
+          ? Math.max(
+              ...categories.map((cat) => (cat as any).display_order || 0)
+            )
           : -1;
       setMode("add-sibling");
       setFormData({
@@ -144,26 +148,20 @@ export default function IndexPage() {
 
     if (!validate()) return;
 
-    const categoryData: any = {
-      parent_id:
-        mode === "add-child" && selectedCategory
-          ? selectedCategory.id
-          : mode === "add-sibling" && selectedCategory
-          ? (selectedCategory as any).parent_id || null
-          : null,
-      name: formData.name.trim(),
-      code: formData.code.trim(),
-      display_order: formData.displayOrder,
-      additional_attribute1: formData.additionalAttribute1 || null,
-      additional_attribute2: formData.additionalAttribute2 || null,
-      description: "",
-      is_active: formData.isActive,
-    };
-
     if (selectedCategory && mode === "view") {
-      // 수정
+      // 수정 모드: parent_id를 제외하고 업데이트 (parent_id는 변경하지 않음)
+      const updateData: any = {
+        name: formData.name.trim(),
+        code: formData.code.trim(),
+        display_order: formData.displayOrder,
+        additional_attribute1: formData.additionalAttribute1 || null,
+        additional_attribute2: formData.additionalAttribute2 || null,
+        description: "",
+        is_active: formData.isActive,
+      };
+
       updateMutation.mutate(
-        { id: selectedCategory.id, updates: categoryData },
+        { id: selectedCategory.id, updates: updateData },
         {
           onSuccess: () => {
             setFormErrors({});
@@ -172,11 +170,29 @@ export default function IndexPage() {
             setMode("view");
           },
           onError: (error) => {
-            setFormErrors({ general: error.message || "저장 중 오류가 발생했습니다." });
+            setFormErrors({
+              general: error.message || "저장 중 오류가 발생했습니다.",
+            });
           },
         }
       );
     } else {
+      // 생성 모드: parent_id를 포함하여 생성
+      const categoryData: any = {
+        parent_id:
+          mode === "add-child" && selectedCategory
+            ? selectedCategory.id
+            : mode === "add-sibling" && selectedCategory
+              ? (selectedCategory as any).parent_id || null
+              : null,
+        name: formData.name.trim(),
+        code: formData.code.trim(),
+        display_order: formData.displayOrder,
+        additional_attribute1: formData.additionalAttribute1 || null,
+        additional_attribute2: formData.additionalAttribute2 || null,
+        description: "",
+        is_active: formData.isActive,
+      };
       // 생성
       createMutation.mutate(categoryData, {
         onSuccess: () => {
@@ -193,7 +209,9 @@ export default function IndexPage() {
           });
         },
         onError: (error) => {
-          setFormErrors({ general: error.message || "저장 중 오류가 발생했습니다." });
+          setFormErrors({
+            general: error.message || "저장 중 오류가 발생했습니다.",
+          });
         },
       });
     }
@@ -230,7 +248,9 @@ export default function IndexPage() {
             <p className="text-sm text-destructive">
               데이터를 불러오는 중 오류가 발생했습니다.
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">{error.message}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {error.message}
+            </p>
             <Button className="mt-4" onClick={() => window.location.reload()}>
               다시 시도
             </Button>
