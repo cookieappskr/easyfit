@@ -9,3 +9,13 @@ export const CONTENT_CONSTRAINTS = {
     max: 200,
   },
 };
+
+/**
+ * TanStack Query Keys for Categories
+ * 일관된 query key 패턴을 위한 팩토리 함수
+ */
+export const categoriesKeys = {
+  all: ['categories'] as const,
+  tree: () => [...categoriesKeys.all, 'tree'] as const,
+  detail: (id: number) => [...categoriesKeys.all, 'detail', id] as const,
+}

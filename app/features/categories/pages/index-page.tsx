@@ -1,101 +1,24 @@
 "use client";
 
 import * as React from "react";
-import {
-  useLoaderData,
-  useActionData,
-  Form,
-  useNavigation,
-} from "react-router";
 import type { Route } from "./+types/index-page";
-import { makeSSRClient } from "~/supa-client";
-import {
-  getAllCategories,
-  getCategoryById,
-  createCategory,
-  updateCategory,
-  type CategoryWithChildren,
-} from "../queries";
+
+// Hooks
+import { useCategories, useCreateCategory, useUpdateCategory } from "../hooks";
+import type { CategoryWithChildren } from "../queries";
+
+// Loader: 빈 loader (React Router 7 필수)
+export const loader = async ({}: Route.LoaderArgs) => {
+  return null;
+};
+
+// Components
 import CategoryTree from "../components/category-tree";
 import InputControl from "~/common/components/input-control";
 import { Button } from "~/common/components/core/button";
 import { Label } from "~/common/components/core/label";
-import { Input } from "~/common/components/core/input";
 import { Switch } from "~/common/components/core/switch";
-import { cn } from "~/lib/utils";
-
-// Loader: 카테고리 목록 조회
-export const loader = async ({ request }: Route.LoaderArgs) => {
-  const { client } = makeSSRClient(request);
-  const categories = await getAllCategories(client);
-  return { categories };
-};
-
-// Action: 카테고리 생성/수정
-export const action = async ({ request }: Route.ActionArgs) => {
-  const { client } = makeSSRClient(request);
-  const formData = await request.formData();
-
-  const intent = formData.get("intent") as string;
-  const id = formData.get("id") ? Number(formData.get("id")) : null;
-  const parentId = formData.get("parentId")
-    ? Number(formData.get("parentId"))
-    : null;
-  const name = formData.get("name") as string;
-  const code = formData.get("code") as string;
-  const displayOrder = formData.get("displayOrder")
-    ? Number(formData.get("displayOrder"))
-    : 0;
-  const additionalAttribute1 = formData.get("additionalAttribute1") as string;
-  const additionalAttribute2 = formData.get("additionalAttribute2") as string;
-  const isActiveValue = formData.get("isActive");
-  const isActive =
-    isActiveValue === null || isActiveValue === undefined
-      ? true
-      : isActiveValue === "true";
-
-  // 유효성 검사
-  const errors: Record<string, string> = {};
-  if (!name || name.trim().length === 0) {
-    errors.name = "유형명을 입력해주세요.";
-  }
-  if (!code || code.trim().length === 0) {
-    errors.code = "유형코드를 입력해주세요.";
-  }
-
-  if (Object.keys(errors).length > 0) {
-    return { errors, success: false };
-  }
-
-  try {
-    const categoryData: any = {
-      parent_id: parentId,
-      name: name.trim(),
-      code: code.trim(),
-      display_order: displayOrder,
-      additional_attribute1: additionalAttribute1 || null,
-      additional_attribute2: additionalAttribute2 || null,
-      description: "", // 선택사항
-      is_active: isActive,
-    };
-
-    if (id && intent === "update") {
-      // 수정
-      await updateCategory(client, id, categoryData);
-    } else {
-      // 생성
-      await createCategory(client, categoryData);
-    }
-
-    return { success: true, errors: {} };
-  } catch (error) {
-    console.error("카테고리 저장 실패:", error);
-    return {
-      success: false,
-      errors: { general: "저장 중 오류가 발생했습니다." },
-    };
-  }
-};
+import { Skeleton } from "~/common/components/core/skeleton";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -104,11 +27,13 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default function IndexPage({ loaderData }: Route.ComponentProps) {
-  const { categories } = loaderData;
-  const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
+export default function IndexPage() {
+  // Query & Mutations
+  const { data: categories = [], isLoading, error } = useCategories();
+  const createMutation = useCreateCategory();
+  const updateMutation = useUpdateCategory();
 
+  // 상태
   const [selectedCategory, setSelectedCategory] =
     React.useState<CategoryWithChildren | null>(null);
   const [expandedIds, setExpandedIds] = React.useState<Set<number>>(new Set());
@@ -123,8 +48,7 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
     additionalAttribute2: "",
     isActive: true,
   });
-
-  const isSubmitting = navigation.state === "submitting";
+  const [formErrors, setFormErrors] = React.useState<Record<string, string>>({});
 
   // 카테고리 선택 핸들러
   const handleSelectCategory = (category: CategoryWithChildren) => {
@@ -138,6 +62,7 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
       additionalAttribute2: (category as any).additional_attribute2 || "",
       isActive: category.is_active,
     });
+    setFormErrors({});
   };
 
   // 트리 확장/축소 핸들러
@@ -155,14 +80,10 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
 
   // 동일레벨 추가 버튼 클릭
   const handleAddSibling = () => {
-    // selectedCategory가 없으면 루트 레벨에 추가
     if (!selectedCategory) {
-      // 기존 루트 노드들의 최대 display_order 찾기
       const maxOrder =
         categories.length > 0
-          ? Math.max(
-              ...categories.map((cat) => (cat as any).display_order || 0)
-            )
+          ? Math.max(...categories.map((cat) => (cat as any).display_order || 0))
           : -1;
       setMode("add-sibling");
       setFormData({
@@ -173,6 +94,7 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
         additionalAttribute2: "",
         isActive: true,
       });
+      setFormErrors({});
       return;
     }
     setMode("add-sibling");
@@ -184,11 +106,11 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
       additionalAttribute2: "",
       isActive: true,
     });
+    setFormErrors({});
   };
 
   // 하위레벨 추가 버튼 클릭
   const handleAddChild = () => {
-    // selectedCategory가 없으면 동작하지 않음 (하위레벨은 부모가 필요)
     if (!selectedCategory) return;
     setMode("add-child");
     setFormData({
@@ -199,15 +121,126 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
       additionalAttribute2: "",
       isActive: true,
     });
+    setFormErrors({});
   };
 
-  // 폼 제출 성공 시 처리
-  React.useEffect(() => {
-    if (actionData?.success) {
-      // 페이지 새로고침하여 최신 데이터 로드
-      window.location.reload();
+  // 유효성 검사
+  const validate = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (!formData.name || formData.name.trim().length === 0) {
+      errors.name = "유형명을 입력해주세요.";
     }
-  }, [actionData?.success]);
+    if (!formData.code || formData.code.trim().length === 0) {
+      errors.code = "유형코드를 입력해주세요.";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // 폼 제출 핸들러
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) return;
+
+    const categoryData: any = {
+      parent_id:
+        mode === "add-child" && selectedCategory
+          ? selectedCategory.id
+          : mode === "add-sibling" && selectedCategory
+          ? (selectedCategory as any).parent_id || null
+          : null,
+      name: formData.name.trim(),
+      code: formData.code.trim(),
+      display_order: formData.displayOrder,
+      additional_attribute1: formData.additionalAttribute1 || null,
+      additional_attribute2: formData.additionalAttribute2 || null,
+      description: "",
+      is_active: formData.isActive,
+    };
+
+    if (selectedCategory && mode === "view") {
+      // 수정
+      updateMutation.mutate(
+        { id: selectedCategory.id, updates: categoryData },
+        {
+          onSuccess: () => {
+            setFormErrors({});
+            // 성공 시 선택 해제 및 모드 초기화
+            setSelectedCategory(null);
+            setMode("view");
+          },
+          onError: (error) => {
+            setFormErrors({ general: error.message || "저장 중 오류가 발생했습니다." });
+          },
+        }
+      );
+    } else {
+      // 생성
+      createMutation.mutate(categoryData, {
+        onSuccess: () => {
+          setFormErrors({});
+          setSelectedCategory(null);
+          setMode("view");
+          setFormData({
+            name: "",
+            code: "",
+            displayOrder: 0,
+            additionalAttribute1: "",
+            additionalAttribute2: "",
+            isActive: true,
+          });
+        },
+        onError: (error) => {
+          setFormErrors({ general: error.message || "저장 중 오류가 발생했습니다." });
+        },
+      });
+    }
+  };
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="px-6 py-4 border-b">
+          <h1 className="title2">유형관리</h1>
+        </div>
+        <div className="flex flex-1 overflow-hidden">
+          <div className="w-[400px] border-r p-4">
+            <Skeleton className="h-full w-full" />
+          </div>
+          <div className="flex-1 p-6">
+            <Skeleton className="h-full w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="px-6 py-4 border-b">
+          <h1 className="title2">유형관리</h1>
+        </div>
+        <div className="flex items-center justify-center flex-1">
+          <div className="text-center">
+            <p className="text-sm text-destructive">
+              데이터를 불러오는 중 오류가 발생했습니다.
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">{error.message}</p>
+            <Button className="mt-4" onClick={() => window.location.reload()}>
+              다시 시도
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="flex flex-col h-full">
@@ -257,34 +290,7 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
         {/* 우측: 상세정보 섹션 */}
         <div className="flex-1 overflow-y-auto p-6">
           {selectedCategory || mode !== "view" ? (
-            <Form method="post" className="space-y-6 max-w-2xl">
-              <input
-                type="hidden"
-                name="intent"
-                value={mode === "view" ? "update" : "create"}
-              />
-              {selectedCategory && mode === "view" && (
-                <input type="hidden" name="id" value={selectedCategory.id} />
-              )}
-              {mode === "add-child" && selectedCategory && (
-                <input
-                  type="hidden"
-                  name="parentId"
-                  value={selectedCategory.id}
-                />
-              )}
-              {mode === "add-sibling" && (
-                <input
-                  type="hidden"
-                  name="parentId"
-                  value={
-                    selectedCategory
-                      ? (selectedCategory as any).parent_id || ""
-                      : ""
-                  }
-                />
-              )}
-
+            <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
               {/* 필수 입력 안내 */}
               <p className="text-sm text-destructive">
                 * 표시는 필수입력 사항입니다.
@@ -297,7 +303,6 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                 required
                 type="text"
                 inputProps={{
-                  name: "name",
                   value: formData.name,
                   onChange: (e) =>
                     setFormData({ ...formData, name: e.target.value }),
@@ -306,7 +311,7 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                       ? true
                       : false,
                 }}
-                error={actionData?.errors?.name}
+                error={formErrors.name}
               />
 
               {/* 유형코드 */}
@@ -316,7 +321,6 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                 required
                 type="text"
                 inputProps={{
-                  name: "code",
                   value: formData.code,
                   onChange: (e) =>
                     setFormData({ ...formData, code: e.target.value }),
@@ -325,7 +329,7 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                       ? true
                       : false,
                 }}
-                error={actionData?.errors?.code}
+                error={formErrors.code}
               />
 
               {/* 표시순서 */}
@@ -334,7 +338,6 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                 id="displayOrder"
                 type="number"
                 inputProps={{
-                  name: "displayOrder",
                   type: "number",
                   value: formData.displayOrder,
                   onChange: (e) =>
@@ -343,7 +346,7 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                       displayOrder: Number(e.target.value) || 0,
                     }),
                 }}
-                error={actionData?.errors?.displayOrder}
+                error={formErrors.displayOrder}
               />
 
               {/* 부가속성1 */}
@@ -352,7 +355,6 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                 id="additionalAttribute1"
                 type="text"
                 inputProps={{
-                  name: "additionalAttribute1",
                   value: formData.additionalAttribute1,
                   onChange: (e) =>
                     setFormData({
@@ -360,7 +362,7 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                       additionalAttribute1: e.target.value,
                     }),
                 }}
-                error={actionData?.errors?.additionalAttribute1}
+                error={formErrors.additionalAttribute1}
               />
 
               {/* 부가속성2 */}
@@ -369,7 +371,6 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                 id="additionalAttribute2"
                 type="text"
                 inputProps={{
-                  name: "additionalAttribute2",
                   value: formData.additionalAttribute2,
                   onChange: (e) =>
                     setFormData({
@@ -377,7 +378,7 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                       additionalAttribute2: e.target.value,
                     }),
                 }}
-                error={actionData?.errors?.additionalAttribute2}
+                error={formErrors.additionalAttribute2}
               />
 
               {/* 사용여부 */}
@@ -386,7 +387,6 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                 <div className="flex items-center gap-3">
                   <Switch
                     id="isActive"
-                    name="isActive"
                     checked={formData.isActive}
                     onCheckedChange={(checked) =>
                       setFormData({ ...formData, isActive: checked })
@@ -399,17 +399,12 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                     {formData.isActive ? "Y" : "N"}
                   </Label>
                 </div>
-                <input
-                  type="hidden"
-                  name="isActive"
-                  value={formData.isActive.toString()}
-                />
               </div>
 
               {/* 일반 에러 메시지 */}
-              {actionData?.errors?.general && (
+              {formErrors.general && (
                 <p className="text-sm text-destructive" role="alert">
-                  {actionData.errors.general}
+                  {formErrors.general}
                 </p>
               )}
 
@@ -419,7 +414,7 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
                   {isSubmitting ? "저장 중..." : "저장"}
                 </Button>
               </div>
-            </Form>
+            </form>
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               좌측에서 항목을 선택하거나 추가 버튼을 클릭해주세요.

@@ -1,5 +1,6 @@
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { browserClient } from "~/supa-client";
+import { cn } from "~/lib/utils";
 
 interface NavigationMenuItemProps {
   /**
@@ -33,6 +34,11 @@ export default function NavigationMenuItem({
   isAuthenticated,
   isAuthMenu = false,
 }: NavigationMenuItemProps) {
+  const location = useLocation();
+  
+  // 현재 경로와 메뉴 경로가 일치하는지 확인
+  const isActive = location.pathname === to || location.pathname.startsWith(to + "/");
+  
   // 로그인 메뉴: 로그인 상태가 아닐 때만 표시
   // 로그아웃 메뉴: 로그인 상태일 때만 표시
   if (isAuthMenu) {
@@ -54,6 +60,13 @@ export default function NavigationMenuItem({
       await browserClient.auth.signOut();
       // 로그아웃 후 홈으로 리다이렉트
       window.location.href = "/";
+      return;
+    }
+    
+    // 같은 페이지를 다시 클릭한 경우 페이지 새로고침
+    if (isActive && !isAuthMenu) {
+      e.preventDefault();
+      window.location.href = to;
     }
   };
 
@@ -61,7 +74,12 @@ export default function NavigationMenuItem({
     <Link
       to={to}
       onClick={handleClick}
-      className="px-4 py-2 rounded transition-all hover:border-2 hover:border-foreground border-2 border-transparent"
+      className={cn(
+        "px-4 py-2 rounded transition-all border-2",
+        isActive && !isAuthMenu
+          ? "border-foreground bg-foreground/5"
+          : "border-transparent hover:border-foreground"
+      )}
     >
       {name}
     </Link>

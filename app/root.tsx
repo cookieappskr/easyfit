@@ -1,3 +1,4 @@
+import * as React from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -11,9 +12,15 @@ import {
 
 import type { Route } from "./+types/root";
 
+// TanStack Query
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { queryClient } from "./lib/query-client";
+
 // Navigation & Auth
 import { getUserById } from "./features/users/queries";
 import { makeSSRClient } from "./supa-client";
+import { useAuthStore, initializeAuth } from "./stores/use-auth-store";
 
 // components
 import Navigation from "./common/components/naviagation";
@@ -79,36 +86,48 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const { user, profile } = loaderData;
   const { pathname } = useLocation();
 
+  // Zustand store 초기화
+  React.useEffect(() => {
+    initializeAuth(user, profile);
+  }, [user, profile]);
+
+  // Store에서 인증 상태 가져오기
+  const { isAuthenticated, isAdmin } = useAuthStore();
+
   // 로딩처리부
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
-  const isAuthenticated = user !== null;
-  const isAdmin = isAuthenticated && profile?.role === "admin";
 
   // 레이아웃 영역
   const isAuthPage = pathname.includes("/auth");
 
   return (
-    <div
-      className={cn("bg-amber-50 h-screen", {
-        "opacity-50": isLoading,
-      })}
-    >
-      {!isAuthPage && (
-        <Navigation
-          isAuthenticated={isAuthenticated}
-          isAdmin={isAdmin}
-          profile={profile}
-        />
-      )}
+    <QueryClientProvider client={queryClient}>
       <div
-        className={cn({
-          "pt-28 px-20": !isAuthPage,
+        className={cn("bg-amber-50 h-screen", {
+          "opacity-50": isLoading,
         })}
       >
-        <Outlet context={{ isAuthenticated, isAdmin, profile }} />
+        {!isAuthPage && (
+          <Navigation
+            isAuthenticated={isAuthenticated}
+            isAdmin={isAdmin}
+            profile={profile}
+          />
+        )}
+        <div
+          className={cn({
+            "pt-28 px-20": !isAuthPage,
+          })}
+        >
+          <Outlet context={{ isAuthenticated, isAdmin, profile }} />
+        </div>
       </div>
-    </div>
+      {/* React Query DevTools - 개발 환경에서만 표시 */}
+      {import.meta.env.DEV && (
+        <ReactQueryDevtools initialIsOpen={false} position="bottom" />
+      )}
+    </QueryClientProvider>
   );
 }
 

@@ -1,26 +1,23 @@
 "use client";
 
 import * as React from "react";
-import {
-  Form,
-  Link,
-  redirect,
-  useActionData,
-  useLoaderData,
-  useNavigation,
-  useSubmit,
-} from "react-router";
+import { useNavigate, useParams } from "react-router";
 import type { Route } from "./+types/detail-page";
-import { makeSSRClient } from "~/supa-client";
+
+// Hooks
 import {
-  createExercise,
-  deleteExercise,
-  getExerciseById,
-  updateExercise,
-} from "../queries";
-import InputControl from "~/common/components/input-control";
+  useExercise,
+  useCreateExercise,
+  useUpdateExercise,
+  useDeleteExercise,
+  useExerciseTypeOptions,
+  useMechanicTypeOptions,
+} from "../hooks";
+
+// Components
 import { Button } from "~/common/components/core/button";
-import { Progress } from "~/common/components/core/progress";
+import { Skeleton } from "~/common/components/core/skeleton";
+import InputControl from "~/common/components/input-control";
 import {
   Select,
   SelectContent,
@@ -28,173 +25,216 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/common/components/core/select";
+import { Progress } from "~/common/components/core/progress";
+
+// Constants
 import { EXERCISE_TYPE_OPTIONS, MECHANIC_TYPE_OPTIONS } from "../constants";
 
-const DEFAULT_GUIDES = [""];
-
-export const loader = async ({ request, params }: Route.LoaderArgs) => {
-  const { client } = makeSSRClient(request);
-
-  if (!params.id || params.id === "new") {
-    return { exercise: null };
-  }
-
-  const id = Number(params.id);
-  if (Number.isNaN(id)) {
-    return { exercise: null };
-  }
-
-  const exercise = await getExerciseById(client, id);
-  return { exercise };
+// Loader (React Router 7 필수)
+export const loader = async ({}: Route.LoaderArgs) => {
+  return null;
 };
 
-export const action = async ({ request }: Route.ActionArgs) => {
-  const { client } = makeSSRClient(request);
-  const formData = await request.formData();
-
-  const intent = (formData.get("intent") as string) || "create";
-  const idValue = formData.get("id");
-  const id = idValue ? Number(idValue) : null;
-
-  if (intent === "delete" && id) {
-    await deleteExercise(client, id);
-    return redirect("/exercises");
-  }
-
-  const exerciseType = (formData.get("exerciseType") as string) || "";
-  const mechanicType = (formData.get("mechanicType") as string) || "";
-  const name = (formData.get("name") as string) || "";
-  const description = (formData.get("description") as string) || "";
-  const quickGuides = formData
-    .getAll("quickGuide")
-    .map((value) => String(value).trim())
-    .filter((value) => value.length > 0);
-  const videoLink = (formData.get("videoLink") as string) || "";
-
-  const errors: Record<string, string> = {};
-  if (!exerciseType) {
-    errors.exerciseType = "운동부위를 선택해주세요.";
-  }
-  if (!mechanicType) {
-    errors.mechanicType = "운동유형을 선택해주세요.";
-  }
-  if (!name || name.trim().length === 0) {
-    errors.name = "운동명을 입력해주세요.";
-  } else if (name.trim().length > 50) {
-    errors.name = "운동명은 50자 이내로 입력해주세요.";
-  }
-  if (!description || description.trim().length === 0) {
-    errors.description = "운동설명을 입력해주세요.";
-  } else if (description.trim().length > 200) {
-    errors.description = "운동설명은 200자 이내로 입력해주세요.";
-  }
-
-  if (Object.keys(errors).length > 0) {
-    return { success: false, errors };
-  }
-
-  const payload = {
-    exercise_type: exerciseType,
-    mechanic_type: mechanicType,
-    name: name.trim(),
-    description: description.trim(),
-    quick_guide: quickGuides.length > 0 ? quickGuides : null,
-    video_link: videoLink.trim() || null,
-  };
-
-  try {
-    if (id && intent === "update") {
-      await updateExercise(client, id, payload);
-    } else {
-      await createExercise(client, payload);
-    }
-    return redirect("/exercises");
-  } catch (error) {
-    console.error("운동 저장 실패:", error);
-    return {
-      success: false,
-      errors: { general: "저장 중 오류가 발생했습니다." },
-    };
-  }
-};
-
-export function meta({}: Route.MetaArgs) {
+export function meta({ params }: Route.MetaArgs) {
+  const isNew = params.id === "new";
   return [
-    { title: "운동상세정보" },
-    { name: "description", content: "Easy Fit 운동상세정보 관리" },
+    { title: isNew ? "운동 추가 - Easy Fit" : "운동 수정 - Easy Fit" },
+    { name: "description", content: "운동상세정보를 관리하세요." },
   ];
 }
 
-export default function DetailPage({ loaderData }: Route.ComponentProps) {
-  const { exercise } = loaderData;
-  const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
-  const submit = useSubmit();
+interface QuickGuideItem {
+  id: string;
+  text: string;
+}
 
-  const isNew = !exercise;
-  const isSubmitting = navigation.state === "submitting";
+export default function DetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isNew = id === "new";
+  const exerciseId = isNew ? null : parseInt(id || "0", 10);
 
-  const [exerciseType, setExerciseType] = React.useState(
-    exercise?.exercise_type ?? ""
-  );
-  const [mechanicType, setMechanicType] = React.useState(
-    exercise?.mechanic_type ?? ""
-  );
-  const [name, setName] = React.useState(exercise?.name ?? "");
-  const [description, setDescription] = React.useState(
-    exercise?.description ?? ""
-  );
-  const [quickGuides, setQuickGuides] = React.useState<string[]>(
-    exercise?.quick_guide?.length ? exercise.quick_guide : DEFAULT_GUIDES
-  );
-  const [videoLink, setVideoLink] = React.useState(
-    exercise?.video_link ?? ""
-  );
+  // TanStack Query
+  const { data: exercise, isLoading } = useExercise(exerciseId);
+  const createMutation = useCreateExercise();
+  const updateMutation = useUpdateExercise();
+  const deleteMutation = useDeleteExercise();
 
+  // 동적 카테고리 옵션 조회
+  const { data: exerciseTypeOptionsData } = useExerciseTypeOptions();
+  const { data: mechanicTypeOptionsData } = useMechanicTypeOptions();
+
+  const currentExerciseTypeOptions =
+    exerciseTypeOptionsData && exerciseTypeOptionsData.length > 0
+      ? exerciseTypeOptionsData
+      : EXERCISE_TYPE_OPTIONS;
+
+  const currentMechanicTypeOptions =
+    mechanicTypeOptionsData && mechanicTypeOptionsData.length > 0
+      ? mechanicTypeOptionsData
+      : MECHANIC_TYPE_OPTIONS;
+
+  // 폼 상태
+  const [exerciseType, setExerciseType] = React.useState("");
+  const [mechanicType, setMechanicType] = React.useState("");
+  const [name, setName] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [videoLink, setVideoLink] = React.useState("");
+  const [quickGuideItems, setQuickGuideItems] = React.useState<
+    QuickGuideItem[]
+  >([]);
+
+  // 에러 상태
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  // 기존 데이터로 폼 초기화
   React.useEffect(() => {
     if (exercise) {
       setExerciseType(exercise.exercise_type);
       setMechanicType(exercise.mechanic_type);
       setName(exercise.name);
       setDescription(exercise.description);
-      setQuickGuides(
-        exercise.quick_guide?.length ? exercise.quick_guide : DEFAULT_GUIDES
+      setVideoLink(exercise.video_link || "");
+      setQuickGuideItems(
+        (exercise.quick_guide || []).map((text, index) => ({
+          id: `guide-${index}`,
+          text,
+        }))
       );
-      setVideoLink(exercise.video_link ?? "");
     }
   }, [exercise]);
 
-  const handleAddGuide = () => {
-    setQuickGuides((prev) => [...prev, ""]);
+  // 새 항목일 경우 초기화
+  React.useEffect(() => {
+    if (isNew) {
+      setExerciseType("");
+      setMechanicType("");
+      setName("");
+      setDescription("");
+      setVideoLink("");
+      setQuickGuideItems([]);
+    }
+  }, [isNew]);
+
+  // 퀵가이드 추가
+  const handleAddQuickGuide = () => {
+    setQuickGuideItems([
+      ...quickGuideItems,
+      { id: `guide-${Date.now()}`, text: "" },
+    ]);
   };
 
-  const handleRemoveGuide = (index: number) => {
-    setQuickGuides((prev) =>
-      prev.length === 1 ? prev : prev.filter((_, idx) => idx !== index)
+  // 퀵가이드 제거
+  const handleRemoveQuickGuide = (id: string) => {
+    setQuickGuideItems(quickGuideItems.filter((item) => item.id !== id));
+  };
+
+  // 퀵가이드 변경
+  const handleQuickGuideChange = (id: string, text: string) => {
+    setQuickGuideItems(
+      quickGuideItems.map((item) => (item.id === id ? { ...item, text } : item))
     );
   };
 
-  const handleGuideChange = (index: number, value: string) => {
-    setQuickGuides((prev) =>
-      prev.map((item, idx) => (idx === index ? value : item))
-    );
+  // 유효성 검사
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!exerciseType) {
+      newErrors.exerciseType = "운동부위를 선택해주세요.";
+    }
+    if (!mechanicType) {
+      newErrors.mechanicType = "운동유형을 선택해주세요.";
+    }
+    if (!name.trim()) {
+      newErrors.name = "운동명을 입력해주세요.";
+    } else if (name.length > 50) {
+      newErrors.name = "운동명은 50글자 이내로 입력해주세요.";
+    }
+    if (!description.trim()) {
+      newErrors.description = "운동설명을 입력해주세요.";
+    } else if (description.length > 200) {
+      newErrors.description = "운동설명은 200글자 이내로 입력해주세요.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleDelete = () => {
-    if (!exercise) return;
-    const shouldDelete = window.confirm(
+  // 등록/수정 핸들러
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) {
+      return;
+    }
+
+    const payload = {
+      exercise_type: exerciseType,
+      mechanic_type: mechanicType,
+      name: name.trim(),
+      description: description.trim(),
+      video_link: videoLink.trim() || null,
+      quick_guide:
+        quickGuideItems.length > 0
+          ? quickGuideItems.map((item) => item.text.trim()).filter(Boolean)
+          : null,
+    };
+
+    try {
+      if (isNew) {
+        await createMutation.mutateAsync(payload);
+      } else {
+        await updateMutation.mutateAsync({
+          id: exerciseId!,
+          updates: payload,
+        });
+      }
+      navigate("/exercises");
+    } catch (error) {
+      console.error("저장 실패:", error);
+    }
+  };
+
+  // 삭제 핸들러
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
       "운동을 삭제하면 관련된 사용자의 운동플랜에서 모두 삭제되므로 주의해야 합니다. 삭제하시겠습니까?"
     );
-    if (!shouldDelete) return;
 
-    const deleteData = new FormData();
-    deleteData.set("intent", "delete");
-    deleteData.set("id", String(exercise.id));
-    submit(deleteData, { method: "post" });
+    if (!confirmed) return;
+
+    try {
+      await deleteMutation.mutateAsync(exerciseId!);
+      navigate("/exercises");
+    } catch (error) {
+      console.error("삭제 실패:", error);
+    }
   };
+
+  // 로딩 상태
+  const isProcessing =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending;
+
+  if (isLoading && !isNew) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="title4">운동상세정보</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            운동상세정보를 관리하세요.
+          </p>
+        </div>
+        <Skeleton className="h-[600px] w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {/* 헤더 */}
       <div>
         <h2 className="title4">운동상세정보</h2>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -202,172 +242,210 @@ export default function DetailPage({ loaderData }: Route.ComponentProps) {
         </p>
       </div>
 
-      <Form method="post" className="space-y-6">
-        {isSubmitting && <Progress value={70} />}
+      {/* 로딩 progress 바 */}
+      {isProcessing && (
+        <div className="rounded-lg border bg-card p-4">
+          <Progress value={undefined} className="w-full" />
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            처리 중...
+          </p>
+        </div>
+      )}
 
-        {!isNew && <input type="hidden" name="id" value={exercise?.id} />}
-        <input type="hidden" name="intent" value={isNew ? "create" : "update"} />
+      {/* 폼 */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="rounded-lg border bg-card p-6 shadow-xs">
+          <div className="space-y-6">
+            {/* 운동부위 분류 */}
+            <InputControl
+              label="운동부위 분류"
+              id="exercise-type"
+              required
+              error={errors.exerciseType}
+            >
+              <Select
+                value={exerciseType}
+                onValueChange={setExerciseType}
+                disabled={isProcessing}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="운동부위를 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currentExerciseTypeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </InputControl>
 
-        <InputControl
-          label="운동부위"
-          id="exerciseType"
-          required
-          error={actionData?.errors?.exerciseType}
-        >
-          <div className="space-y-2">
-            <Select value={exerciseType} onValueChange={setExerciseType}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="운동부위를 선택하세요" />
-              </SelectTrigger>
-              <SelectContent align="start">
-                {EXERCISE_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <input type="hidden" name="exerciseType" value={exerciseType} />
-          </div>
-        </InputControl>
+            {/* 운동유형 */}
+            <InputControl
+              label="운동유형"
+              id="mechanic-type"
+              required
+              error={errors.mechanicType}
+            >
+              <Select
+                value={mechanicType}
+                onValueChange={setMechanicType}
+                disabled={isProcessing}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="운동유형을 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currentMechanicTypeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </InputControl>
 
-        <InputControl
-          label="운동유형"
-          id="mechanicType"
-          required
-          error={actionData?.errors?.mechanicType}
-        >
-          <div className="space-y-2">
-            <Select value={mechanicType} onValueChange={setMechanicType}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="운동유형을 선택하세요" />
-              </SelectTrigger>
-              <SelectContent align="start">
-                {MECHANIC_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <input type="hidden" name="mechanicType" value={mechanicType} />
-          </div>
-        </InputControl>
+            {/* 운동명 */}
+            <InputControl
+              label="운동명"
+              id="name"
+              required
+              error={errors.name}
+              tooltip="50글자 이내로 입력해주세요"
+              inputProps={{
+                value: name,
+                onChange: (e) => setName(e.target.value),
+                placeholder: "운동명을 입력하세요",
+                maxLength: 50,
+                disabled: isProcessing,
+              }}
+            />
 
-        <InputControl
-          label="운동명"
-          id="name"
-          required
-          type="text"
-          inputProps={{
-            name: "name",
-            value: name,
-            maxLength: 50,
-            onChange: (event) => setName(event.target.value),
-          }}
-          error={actionData?.errors?.name}
-        />
+            {/* 운동설명 */}
+            <InputControl
+              label="운동설명"
+              id="description"
+              required
+              error={errors.description}
+              tooltip="200글자 이내로 입력해주세요"
+              type="textarea"
+              textareaProps={{
+                value: description,
+                onChange: (e) => setDescription(e.target.value),
+                placeholder: "운동설명을 입력하세요",
+                maxLength: 200,
+                rows: 4,
+                disabled: isProcessing,
+              }}
+            />
 
-        <InputControl
-          label="운동설명"
-          id="description"
-          required
-          type="textarea"
-          textareaProps={{
-            name: "description",
-            value: description,
-            maxLength: 200,
-            onChange: (event) => setDescription(event.target.value),
-          }}
-          error={actionData?.errors?.description}
-        />
+            {/* 동영상 링크 */}
+            <InputControl
+              label="동영상 링크"
+              id="video-link"
+              tooltip="운동방법에 대한 동영상 가이드 링크를 입력하세요"
+              inputProps={{
+                value: videoLink,
+                onChange: (e) => setVideoLink(e.target.value),
+                placeholder: "https://...",
+                type: "url",
+                disabled: isProcessing,
+              }}
+            />
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">퀵가이드</p>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddGuide}>
-              + 가이드 추가
-            </Button>
-          </div>
-          <div className="space-y-3">
-            {quickGuides.map((guide, index) => (
-              <div key={index} className="flex items-start gap-3">
-                <div className="flex-1">
-                  <InputControl
-                    label={`퀵가이드 ${index + 1}`}
-                    id={`quickGuide-${index}`}
-                    type="text"
-                    inputProps={{
-                      name: "quickGuide",
-                      value: guide,
-                      onChange: (event) =>
-                        handleGuideChange(index, event.target.value),
-                    }}
-                  />
+            {/* 퀵가이드 */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium">퀵가이드</label>
+                  <span className="text-xs text-muted-foreground">
+                    (운동방법에 대한 가이드)
+                  </span>
                 </div>
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemoveGuide(index)}
-                  disabled={quickGuides.length === 1}
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddQuickGuide}
+                  disabled={isProcessing}
                 >
-                  삭제
+                  항목 추가
                 </Button>
               </div>
-            ))}
+
+              {quickGuideItems.length > 0 && (
+                <div className="space-y-2">
+                  {quickGuideItems.map((item, index) => (
+                    <div key={item.id} className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground w-6">
+                        {index + 1}.
+                      </span>
+                      <InputControl
+                        label=""
+                        id={`quick-guide-${item.id}`}
+                        inputProps={{
+                          value: item.text,
+                          onChange: (e) =>
+                            handleQuickGuideChange(item.id, e.target.value),
+                          placeholder: "가이드 내용을 입력하세요",
+                          disabled: isProcessing,
+                        }}
+                      >
+                        <input
+                          value={item.text}
+                          onChange={(e) =>
+                            handleQuickGuideChange(item.id, e.target.value)
+                          }
+                          placeholder="가이드 내용을 입력하세요"
+                          disabled={isProcessing}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                      </InputControl>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveQuickGuide(item.id)}
+                        disabled={isProcessing}
+                      >
+                        제거
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <InputControl
-          label="동영상링크"
-          id="videoLink"
-          type="text"
-          inputProps={{
-            name: "videoLink",
-            value: videoLink,
-            onChange: (event) => setVideoLink(event.target.value),
-          }}
-        />
-
-        {actionData?.errors?.general && (
-          <p className="text-sm text-destructive" role="alert">
-            {actionData.errors.general}
-          </p>
-        )}
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* 버튼 그룹 */}
+        <div className="flex items-center justify-between">
           {!isNew && (
             <Button
               type="button"
               variant="destructive"
               onClick={handleDelete}
-              disabled={isSubmitting}
+              disabled={isProcessing}
             >
               삭제
             </Button>
           )}
-
-          <div className="flex flex-wrap items-center gap-3">
-            {!isNew && (
-              <Button
-                type="button"
-                variant="outline"
-                asChild
-                disabled={isSubmitting}
-              >
-                <Link to="/exercises">목록</Link>
-              </Button>
-            )}
+          <div className="flex gap-3 ml-auto">
             <Button
-              type="submit"
-              disabled={isSubmitting}
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/exercises")}
+              disabled={isProcessing}
             >
+              목록
+            </Button>
+            <Button type="submit" disabled={isProcessing}>
               {isNew ? "추가" : "업데이트"}
             </Button>
           </div>
         </div>
-      </Form>
+      </form>
     </div>
   );
 }

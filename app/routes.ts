@@ -15,8 +15,8 @@ export default [
   ...prefix("categories", [index("features/categories/pages/index-page.tsx")]),
   ...prefix("exercises", [
     layout("features/exercises/layout/base-layout.tsx", [
-      route("/:id", "features/exercises/pages/detail-page.tsx"),
       index("features/exercises/pages/index-page.tsx"),
+      route("/:id", "features/exercises/pages/detail-page.tsx"),
     ]),
   ]),
   ...prefix("auth", [

@@ -8,6 +8,8 @@ interface ExerciseListItemProps {
   exercise: Exercise;
   index: number;
   isLast?: boolean;
+  exerciseTypeOptions?: { value: string; label: string }[];
+  mechanicTypeOptions?: { value: string; label: string }[];
 }
 
 const getLabel = (value: string, options: { value: string; label: string }[]) =>
@@ -17,6 +19,8 @@ export default function ExerciseListItem({
   exercise,
   index,
   isLast = false,
+  exerciseTypeOptions = EXERCISE_TYPE_OPTIONS,
+  mechanicTypeOptions = MECHANIC_TYPE_OPTIONS,
 }: ExerciseListItemProps) {
   return (
     <Link
@@ -29,10 +33,10 @@ export default function ExerciseListItem({
     >
       <span className="text-muted-foreground">{index}</span>
       <Badge variant="secondary">
-        {getLabel(exercise.exercise_type, EXERCISE_TYPE_OPTIONS)}
+        {getLabel(exercise.exercise_type, exerciseTypeOptions)}
       </Badge>
       <Badge variant="outline">
-        {getLabel(exercise.mechanic_type, MECHANIC_TYPE_OPTIONS)}
+        {getLabel(exercise.mechanic_type, mechanicTypeOptions)}
       </Badge>
       <span className="truncate font-medium">{exercise.name}</span>
       <span className="line-clamp-2 text-muted-foreground">

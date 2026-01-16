@@ -23,7 +23,10 @@ export default function CategoryTree({
   onToggleExpand,
   level = 0,
 }: CategoryTreeProps) {
-  const handleToggle = (e: React.MouseEvent, category: CategoryWithChildren) => {
+  const handleToggle = (
+    e: React.MouseEvent,
+    category: CategoryWithChildren
+  ) => {
     e.stopPropagation();
     if (onToggleExpand && (category.children?.length || 0) > 0) {
       onToggleExpand(category.id);
