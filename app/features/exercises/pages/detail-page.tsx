@@ -55,7 +55,11 @@ export default function DetailPage() {
   const exerciseId = isNew ? null : parseInt(id || "0", 10);
 
   // TanStack Query
-  const { data: exercise, isLoading } = useExercise(exerciseId);
+  const {
+    data: exercise,
+    isLoading,
+    error: exerciseError,
+  } = useExercise(exerciseId);
   const createMutation = useCreateExercise();
   const updateMutation = useUpdateExercise();
   const deleteMutation = useDeleteExercise();
@@ -90,8 +94,8 @@ export default function DetailPage() {
   // 기존 데이터로 폼 초기화
   React.useEffect(() => {
     if (exercise) {
-      setExerciseType(exercise.exercise_type);
-      setMechanicType(exercise.mechanic_type);
+      setExerciseType(exercise.exercise_type || "");
+      setMechanicType(exercise.mechanic_type || "");
       setName(exercise.name);
       setDescription(exercise.description);
       setVideoLink(exercise.video_link || "");
@@ -101,12 +105,8 @@ export default function DetailPage() {
           text,
         }))
       );
-    }
-  }, [exercise]);
-
-  // 새 항목일 경우 초기화
-  React.useEffect(() => {
-    if (isNew) {
+    } else if (isNew) {
+      // 새 항목일 경우에만 초기화
       setExerciseType("");
       setMechanicType("");
       setName("");
@@ -114,7 +114,7 @@ export default function DetailPage() {
       setVideoLink("");
       setQuickGuideItems([]);
     }
-  }, [isNew]);
+  }, [exercise, isNew]);
 
   // 퀵가이드 추가
   const handleAddQuickGuide = () => {
@@ -264,8 +264,13 @@ export default function DetailPage() {
               error={errors.exerciseType}
             >
               <Select
-                value={exerciseType}
-                onValueChange={setExerciseType}
+                value={exerciseType || ""}
+                onValueChange={(value) => {
+                  if (value) {
+                    // 빈 문자열 무시 (초기 렌더링 시 발생)
+                    setExerciseType(value);
+                  }
+                }}
                 disabled={isProcessing}
               >
                 <SelectTrigger>
@@ -289,8 +294,13 @@ export default function DetailPage() {
               error={errors.mechanicType}
             >
               <Select
-                value={mechanicType}
-                onValueChange={setMechanicType}
+                value={mechanicType || ""}
+                onValueChange={(value) => {
+                  if (value) {
+                    // 빈 문자열 무시 (초기 렌더링 시 발생)
+                    setMechanicType(value);
+                  }
+                }}
                 disabled={isProcessing}
               >
                 <SelectTrigger>
