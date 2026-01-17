@@ -134,6 +134,39 @@ export type Database = {
         }
         Relationships: []
       }
+      workout_plan_prompts: {
+        Row: {
+          base_prompt: string
+          created_at: string
+          id: number
+          is_active: boolean
+          llm_model_code: string
+          output_format: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          base_prompt: string
+          created_at?: string
+          id?: never
+          is_active?: boolean
+          llm_model_code: string
+          output_format: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          base_prompt?: string
+          created_at?: string
+          id?: never
+          is_active?: boolean
+          llm_model_code?: string
+          output_format?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/common/components/core/dialog";
-import InputControl from "~/common/components/input-control";
+import FormItem from "~/common/components/form-item";
 
 // Metadata 설정부
 export const meta = () => {
@@ -294,7 +294,7 @@ export default function UpdateProfilePage() {
       )}
 
       <Form method="post" className="space-y-6">
-        <InputControl
+        <FormItem
           label="닉네임"
           id="nickname"
           type="text"
@@ -310,7 +310,7 @@ export default function UpdateProfilePage() {
         />
 
         <div className="space-y-2">
-          <InputControl
+          <FormItem
             label="성별"
             id="gender"
             type="switch"
@@ -327,7 +327,7 @@ export default function UpdateProfilePage() {
           <input type="hidden" name="gender" value={String(gender)} />
         </div>
 
-        <InputControl
+        <FormItem
           label="생년"
           id="birth_year"
           type="number"
@@ -344,7 +344,7 @@ export default function UpdateProfilePage() {
           }}
         />
 
-        <InputControl
+        <FormItem
           label="키 (cm)"
           id="height"
           type="number"
@@ -362,7 +362,7 @@ export default function UpdateProfilePage() {
           }}
         />
 
-        <InputControl
+        <FormItem
           label="체중 (kg)"
           id="weight"
           type="number"

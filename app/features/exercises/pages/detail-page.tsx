@@ -17,7 +17,7 @@ import {
 // Components
 import { Button } from "~/common/components/core/button";
 import { Skeleton } from "~/common/components/core/skeleton";
-import InputControl from "~/common/components/input-control";
+import FormItem from "~/common/components/form-item";
 import {
   Select,
   SelectContent,
@@ -257,7 +257,7 @@ export default function DetailPage() {
         <div className="rounded-lg border bg-card p-6 shadow-xs">
           <div className="space-y-6">
             {/* 운동부위 분류 */}
-            <InputControl
+            <FormItem
               label="운동부위 분류"
               id="exercise-type"
               required
@@ -284,10 +284,10 @@ export default function DetailPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </InputControl>
+            </FormItem>
 
             {/* 운동유형 */}
-            <InputControl
+            <FormItem
               label="운동유형"
               id="mechanic-type"
               required
@@ -314,10 +314,10 @@ export default function DetailPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </InputControl>
+            </FormItem>
 
             {/* 운동명 */}
-            <InputControl
+            <FormItem
               label="운동명"
               id="name"
               required
@@ -333,7 +333,7 @@ export default function DetailPage() {
             />
 
             {/* 운동설명 */}
-            <InputControl
+            <FormItem
               label="운동설명"
               id="description"
               required
@@ -351,7 +351,7 @@ export default function DetailPage() {
             />
 
             {/* 동영상 링크 */}
-            <InputControl
+            <FormItem
               label="동영상 링크"
               id="video-link"
               tooltip="운동방법에 대한 동영상 가이드 링크를 입력하세요"
@@ -391,7 +391,7 @@ export default function DetailPage() {
                       <span className="text-sm text-muted-foreground w-6">
                         {index + 1}.
                       </span>
-                      <InputControl
+                      <FormItem
                         label=""
                         id={`quick-guide-${item.id}`}
                         inputProps={{
@@ -411,7 +411,7 @@ export default function DetailPage() {
                           disabled={isProcessing}
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         />
-                      </InputControl>
+                      </FormItem>
                       <Button
                         type="button"
                         variant="ghost"

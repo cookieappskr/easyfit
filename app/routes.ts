@@ -19,6 +19,12 @@ export default [
       route("/:id", "features/exercises/pages/detail-page.tsx"),
     ]),
   ]),
+  ...prefix("plans", [
+    layout("features/plans/layouts/base-layout.tsx", [
+      index("features/plans/pages/index-page.tsx"),
+      route("/:id", "features/plans/pages/detail-page.tsx"),
+    ]),
+  ]),
   ...prefix("auth", [
     layout("features/auth/layouts/base-layout.tsx", [
       route("/login", "features/auth/pages/login-page.tsx"),

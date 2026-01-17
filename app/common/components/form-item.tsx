@@ -11,7 +11,7 @@ import {
 import { HelpCircle } from "lucide-react";
 import { cn } from "~/lib/utils";
 
-interface InputControlProps {
+interface FormItemProps {
   /**
    * 레이블 텍스트
    */
@@ -59,11 +59,11 @@ interface InputControlProps {
 }
 
 /**
- * 입력 컨트롤 컴포넌트
+ * 폼 아이템 컴포넌트
  *
  * 레이블, 입력 가이드 툴팁 버튼, 입력 항목, 에러 메시지 표시부로 구성
  */
-export default function InputControl({
+export default function FormItem({
   label,
   id,
   tooltip,
@@ -75,7 +75,7 @@ export default function InputControl({
   switchProps,
   switchLabel,
   children,
-}: InputControlProps) {
+}: FormItemProps) {
   const isSwitch = type === "switch";
   const isTextarea = type === "textarea";
 

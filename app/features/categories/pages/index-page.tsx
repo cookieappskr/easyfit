@@ -14,7 +14,7 @@ export const loader = async ({}: Route.LoaderArgs) => {
 
 // Components
 import CategoryTree from "../components/category-tree";
-import InputControl from "~/common/components/input-control";
+import FormItem from "~/common/components/form-item";
 import { Button } from "~/common/components/core/button";
 import { Label } from "~/common/components/core/label";
 import { Switch } from "~/common/components/core/switch";
@@ -317,7 +317,7 @@ export default function IndexPage() {
               </p>
 
               {/* 유형명 */}
-              <InputControl
+              <FormItem
                 label="유형명"
                 id="name"
                 required
@@ -335,7 +335,7 @@ export default function IndexPage() {
               />
 
               {/* 유형코드 */}
-              <InputControl
+              <FormItem
                 label="유형코드"
                 id="code"
                 required
@@ -353,7 +353,7 @@ export default function IndexPage() {
               />
 
               {/* 표시순서 */}
-              <InputControl
+              <FormItem
                 label="표시순서"
                 id="displayOrder"
                 type="number"
@@ -370,7 +370,7 @@ export default function IndexPage() {
               />
 
               {/* 부가속성1 */}
-              <InputControl
+              <FormItem
                 label="부가속성1"
                 id="additionalAttribute1"
                 type="text"
@@ -386,7 +386,7 @@ export default function IndexPage() {
               />
 
               {/* 부가속성2 */}
-              <InputControl
+              <FormItem
                 label="부가속성2"
                 id="additionalAttribute2"
                 type="text"

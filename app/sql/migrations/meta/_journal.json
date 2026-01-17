@@ -36,6 +36,13 @@
       "when": 1768486509994,
       "tag": "0004_tiny_husk",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1768651817224,
+      "tag": "0005_silly_lifeguard",
+      "breakpoints": true
     }
   ]
 }
