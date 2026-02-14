@@ -16,14 +16,13 @@ export type Database = {
     Tables: {
       categories: {
         Row: {
+          value: string | null
+          description: string | null
           additional_attribute1: string | null
           additional_attribute2: string | null
           additional_attribute3: string | null
-          additional_attribute4: string | null
-          additional_attribute5: string | null
           code: string
           created_at: string
-          description: string | null
           display_order: number
           id: number
           is_active: boolean
@@ -32,14 +31,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          value?: string | null
+          description?: string | null
           additional_attribute1?: string | null
           additional_attribute2?: string | null
           additional_attribute3?: string | null
-          additional_attribute4?: string | null
-          additional_attribute5?: string | null
           code: string
           created_at?: string
-          description?: string | null
           display_order?: number
           id?: never
           is_active?: boolean
@@ -48,14 +46,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          value?: string | null
+          description?: string | null
           additional_attribute1?: string | null
           additional_attribute2?: string | null
           additional_attribute3?: string | null
-          additional_attribute4?: string | null
-          additional_attribute5?: string | null
           code?: string
           created_at?: string
-          description?: string | null
           display_order?: number
           id?: never
           is_active?: boolean

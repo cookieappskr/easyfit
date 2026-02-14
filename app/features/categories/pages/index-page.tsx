@@ -44,21 +44,21 @@ export default function IndexPage() {
     React.useState<CategoryWithChildren | null>(null);
   const [expandedIds, setExpandedIds] = React.useState<Set<number>>(new Set());
   const [mode, setMode] = React.useState<"view" | "add-sibling" | "add-child">(
-    "view"
+    "view",
   );
   const [formData, setFormData] = React.useState({
     name: "",
     code: "",
     displayOrder: 0,
+    value: "",
+    description: "",
     additionalAttribute1: "",
     additionalAttribute2: "",
     additionalAttribute3: "",
-    additionalAttribute4: "",
-    additionalAttribute5: "",
     isActive: true,
   });
   const [formErrors, setFormErrors] = React.useState<Record<string, string>>(
-    {}
+    {},
   );
 
   // 카테고리 선택 핸들러
@@ -69,11 +69,11 @@ export default function IndexPage() {
       name: category.name,
       code: (category as any).code || "",
       displayOrder: (category as any).display_order || 0,
+      value: (category as any).value || "",
+      description: (category as any).description || "",
       additionalAttribute1: (category as any).additional_attribute1 || "",
       additionalAttribute2: (category as any).additional_attribute2 || "",
       additionalAttribute3: (category as any).additional_attribute3 || "",
-      additionalAttribute4: (category as any).additional_attribute4 || "",
-      additionalAttribute5: (category as any).additional_attribute5 || "",
       isActive: category.is_active,
     });
     setFormErrors({});
@@ -98,7 +98,7 @@ export default function IndexPage() {
       const maxOrder =
         categories.length > 0
           ? Math.max(
-              ...categories.map((cat) => (cat as any).display_order || 0)
+              ...categories.map((cat) => (cat as any).display_order || 0),
             )
           : -1;
       setMode("add-sibling");
@@ -106,11 +106,11 @@ export default function IndexPage() {
         name: "",
         code: "",
         displayOrder: maxOrder + 1,
+        value: "",
+        description: "",
         additionalAttribute1: "",
         additionalAttribute2: "",
         additionalAttribute3: "",
-        additionalAttribute4: "",
-        additionalAttribute5: "",
         isActive: true,
       });
       setFormErrors({});
@@ -121,11 +121,11 @@ export default function IndexPage() {
       name: "",
       code: "",
       displayOrder: ((selectedCategory as any).display_order || 0) + 1,
+      value: "",
+      description: "",
       additionalAttribute1: "",
       additionalAttribute2: "",
       additionalAttribute3: "",
-      additionalAttribute4: "",
-      additionalAttribute5: "",
       isActive: true,
     });
     setFormErrors({});
@@ -139,11 +139,11 @@ export default function IndexPage() {
       name: "",
       code: "",
       displayOrder: 0,
+      value: "",
+      description: "",
       additionalAttribute1: "",
       additionalAttribute2: "",
       additionalAttribute3: "",
-      additionalAttribute4: "",
-      additionalAttribute5: "",
       isActive: true,
     });
     setFormErrors({});
@@ -175,12 +175,11 @@ export default function IndexPage() {
         name: formData.name.trim(),
         code: formData.code.trim(),
         display_order: formData.displayOrder,
+        value: formData.value || null,
+        description: formData.description || null,
         additional_attribute1: formData.additionalAttribute1 || null,
         additional_attribute2: formData.additionalAttribute2 || null,
         additional_attribute3: formData.additionalAttribute3 || null,
-        additional_attribute4: formData.additionalAttribute4 || null,
-        additional_attribute5: formData.additionalAttribute5 || null,
-        description: "",
         is_active: formData.isActive,
       };
 
@@ -201,11 +200,14 @@ export default function IndexPage() {
               name: updated.name,
               code: (updated as any).code || "",
               displayOrder: (updated as any).display_order ?? 0,
-              additionalAttribute1: (updated as any).additional_attribute1 || "",
-              additionalAttribute2: (updated as any).additional_attribute2 || "",
-              additionalAttribute3: (updated as any).additional_attribute3 || "",
-              additionalAttribute4: (updated as any).additional_attribute4 || "",
-              additionalAttribute5: (updated as any).additional_attribute5 || "",
+              value: (updated as any).value || "",
+              description: (updated as any).description || "",
+              additionalAttribute1:
+                (updated as any).additional_attribute1 || "",
+              additionalAttribute2:
+                (updated as any).additional_attribute2 || "",
+              additionalAttribute3:
+                (updated as any).additional_attribute3 || "",
               isActive: updated.is_active,
             });
           },
@@ -214,7 +216,7 @@ export default function IndexPage() {
               general: error.message || "저장 중 오류가 발생했습니다.",
             });
           },
-        }
+        },
       );
     } else {
       // 생성 모드: parent_id를 포함하여 생성
@@ -228,12 +230,11 @@ export default function IndexPage() {
         name: formData.name.trim(),
         code: formData.code.trim(),
         display_order: formData.displayOrder,
+        value: formData.value || null,
+        description: formData.description || null,
         additional_attribute1: formData.additionalAttribute1 || null,
         additional_attribute2: formData.additionalAttribute2 || null,
         additional_attribute3: formData.additionalAttribute3 || null,
-        additional_attribute4: formData.additionalAttribute4 || null,
-        additional_attribute5: formData.additionalAttribute5 || null,
-        description: "",
         is_active: formData.isActive,
       };
       // 생성
@@ -252,11 +253,14 @@ export default function IndexPage() {
             name: newCategory.name,
             code: (newCategory as any).code || "",
             displayOrder: (newCategory as any).display_order ?? 0,
-            additionalAttribute1: (newCategory as any).additional_attribute1 || "",
-            additionalAttribute2: (newCategory as any).additional_attribute2 || "",
-            additionalAttribute3: (newCategory as any).additional_attribute3 || "",
-            additionalAttribute4: (newCategory as any).additional_attribute4 || "",
-            additionalAttribute5: (newCategory as any).additional_attribute5 || "",
+            value: (newCategory as any).value || "",
+            description: (newCategory as any).description || "",
+            additionalAttribute1:
+              (newCategory as any).additional_attribute1 || "",
+            additionalAttribute2:
+              (newCategory as any).additional_attribute2 || "",
+            additionalAttribute3:
+              (newCategory as any).additional_attribute3 || "",
             isActive: newCategory.is_active,
           });
           // 하위 항목 추가 시 부모 노드 확장하여 새 항목이 보이도록
@@ -278,7 +282,7 @@ export default function IndexPage() {
     if (!selectedCategory || mode !== "view") return;
     if (
       !window.confirm(
-        "선택한 항목과 하위 항목이 모두 삭제됩니다. 항목을 삭제하시겠습니까?"
+        "선택한 항목과 하위 항목이 모두 삭제됩니다. 항목을 삭제하시겠습니까?",
       )
     ) {
       return;
@@ -292,11 +296,11 @@ export default function IndexPage() {
           name: "",
           code: "",
           displayOrder: 0,
+          value: "",
+          description: "",
           additionalAttribute1: "",
           additionalAttribute2: "",
           additionalAttribute3: "",
-          additionalAttribute4: "",
-          additionalAttribute5: "",
           isActive: true,
         });
       },
@@ -455,7 +459,39 @@ export default function IndexPage() {
                 error={formErrors.displayOrder}
               />
 
-              {/* 부가속성1 */}
+              {/* value (구 부가속성1) */}
+              <FormItem
+                label="값"
+                id="value"
+                type="text"
+                inputProps={{
+                  value: formData.value,
+                  onChange: (e) =>
+                    setFormData({
+                      ...formData,
+                      value: e.target.value,
+                    }),
+                }}
+                error={formErrors.value}
+              />
+
+              {/* description (구 부가속성2) */}
+              <FormItem
+                label="요약"
+                id="description"
+                type="text"
+                inputProps={{
+                  value: formData.description,
+                  onChange: (e) =>
+                    setFormData({
+                      ...formData,
+                      description: e.target.value,
+                    }),
+                }}
+                error={formErrors.description}
+              />
+
+              {/* 부가속성1 (구 부가속성3) */}
               <FormItem
                 label="부가속성1"
                 id="additionalAttribute1"
@@ -471,7 +507,7 @@ export default function IndexPage() {
                 error={formErrors.additionalAttribute1}
               />
 
-              {/* 부가속성2 */}
+              {/* 부가속성2 (구 부가속성4) */}
               <FormItem
                 label="부가속성2"
                 id="additionalAttribute2"
@@ -487,7 +523,7 @@ export default function IndexPage() {
                 error={formErrors.additionalAttribute2}
               />
 
-              {/* 부가속성3 */}
+              {/* 부가속성3 (구 부가속성5) */}
               <FormItem
                 label="부가속성3"
                 id="additionalAttribute3"
@@ -501,38 +537,6 @@ export default function IndexPage() {
                     }),
                 }}
                 error={formErrors.additionalAttribute3}
-              />
-
-              {/* 부가속성4 */}
-              <FormItem
-                label="부가속성4"
-                id="additionalAttribute4"
-                type="text"
-                inputProps={{
-                  value: formData.additionalAttribute4,
-                  onChange: (e) =>
-                    setFormData({
-                      ...formData,
-                      additionalAttribute4: e.target.value,
-                    }),
-                }}
-                error={formErrors.additionalAttribute4}
-              />
-
-              {/* 부가속성5 */}
-              <FormItem
-                label="부가속성5"
-                id="additionalAttribute5"
-                type="text"
-                inputProps={{
-                  value: formData.additionalAttribute5,
-                  onChange: (e) =>
-                    setFormData({
-                      ...formData,
-                      additionalAttribute5: e.target.value,
-                    }),
-                }}
-                error={formErrors.additionalAttribute5}
               />
 
               {/* 사용여부 */}
