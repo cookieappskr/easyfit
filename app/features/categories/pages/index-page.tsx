@@ -181,11 +181,27 @@ export default function IndexPage() {
       updateMutation.mutate(
         { id: selectedCategory.id, updates: updateData },
         {
-          onSuccess: () => {
+          onSuccess: (updatedCategory) => {
             setFormErrors({});
-            // 성공 시 선택 해제 및 모드 초기화
-            setSelectedCategory(null);
-            setMode("view");
+            // 수정된 항목을 선택 상태로 유지
+            const updated: CategoryWithChildren = {
+              ...selectedCategory,
+              ...updatedCategory,
+              children: selectedCategory.children,
+              childrenCount: selectedCategory.childrenCount,
+            };
+            setSelectedCategory(updated);
+            setFormData({
+              name: updated.name,
+              code: (updated as any).code || "",
+              displayOrder: (updated as any).display_order ?? 0,
+              additionalAttribute1: (updated as any).additional_attribute1 || "",
+              additionalAttribute2: (updated as any).additional_attribute2 || "",
+              additionalAttribute3: (updated as any).additional_attribute3 || "",
+              additionalAttribute4: (updated as any).additional_attribute4 || "",
+              additionalAttribute5: (updated as any).additional_attribute5 || "",
+              isActive: updated.is_active,
+            });
           },
           onError: (error) => {
             setFormErrors({
@@ -216,21 +232,31 @@ export default function IndexPage() {
       };
       // 생성
       createMutation.mutate(categoryData, {
-        onSuccess: () => {
+        onSuccess: (newCategory) => {
           setFormErrors({});
-          setSelectedCategory(null);
           setMode("view");
+          // 새로 생성된 항목을 선택 상태로 설정
+          const newItem: CategoryWithChildren = {
+            ...newCategory,
+            children: [],
+            childrenCount: 0,
+          };
+          setSelectedCategory(newItem);
           setFormData({
-            name: "",
-            code: "",
-            displayOrder: 0,
-            additionalAttribute1: "",
-            additionalAttribute2: "",
-            additionalAttribute3: "",
-            additionalAttribute4: "",
-            additionalAttribute5: "",
-            isActive: true,
+            name: newCategory.name,
+            code: (newCategory as any).code || "",
+            displayOrder: (newCategory as any).display_order ?? 0,
+            additionalAttribute1: (newCategory as any).additional_attribute1 || "",
+            additionalAttribute2: (newCategory as any).additional_attribute2 || "",
+            additionalAttribute3: (newCategory as any).additional_attribute3 || "",
+            additionalAttribute4: (newCategory as any).additional_attribute4 || "",
+            additionalAttribute5: (newCategory as any).additional_attribute5 || "",
+            isActive: newCategory.is_active,
           });
+          // 하위 항목 추가 시 부모 노드 확장하여 새 항목이 보이도록
+          if (categoryData.parent_id) {
+            setExpandedIds((prev) => new Set(prev).add(categoryData.parent_id));
+          }
         },
         onError: (error) => {
           setFormErrors({
