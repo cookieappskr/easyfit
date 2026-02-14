@@ -58,8 +58,71 @@ export default function IndexPage() {
     isActive: true,
   });
   const [formErrors, setFormErrors] = React.useState<Record<string, string>>(
-    {},
+    {}
   );
+
+  // 트리에서 모든 카테고리를 평탄화하여 반환
+  const getAllCategoriesFlat = React.useCallback(
+    (cats: CategoryWithChildren[]): CategoryWithChildren[] => {
+      const result: CategoryWithChildren[] = [];
+      function traverse(c: CategoryWithChildren) {
+        result.push(c);
+        (c.children || []).forEach(traverse);
+      }
+      cats.forEach(traverse);
+      return result;
+    },
+    []
+  );
+
+  // 유형코드 중복 검사 (blur 시)
+  const handleCodeBlur = React.useCallback(() => {
+    const code = formData.code.trim();
+    if (!code) return;
+
+    const flatCategories = getAllCategoriesFlat(categories);
+    const isDuplicate = flatCategories.some((cat) => {
+      const existingCode = (cat as any).code?.trim();
+      if (!existingCode) return false;
+      if (mode === "view" && selectedCategory?.id === cat.id) return false;
+      return existingCode.toLowerCase() === code.toLowerCase();
+    });
+
+    setFormErrors((prev) => ({
+      ...prev,
+      code: isDuplicate
+        ? "유형코드가 중복됩니다."
+        : prev.code === "유형코드가 중복됩니다."
+          ? ""
+          : prev.code,
+    }));
+  }, [
+    formData.code,
+    categories,
+    mode,
+    selectedCategory?.id,
+    getAllCategoriesFlat,
+  ]);
+
+  // 저장 버튼 활성화 여부: 필수값 입력 + 중복 없음 + 제출 중 아님
+  const isSaveDisabled = React.useMemo(() => {
+    if (
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending
+    )
+      return true;
+    if (!formData.name?.trim() || !formData.code?.trim()) return true;
+    if (formErrors.code === "유형코드가 중복됩니다.") return true;
+    return false;
+  }, [
+    createMutation.isPending,
+    updateMutation.isPending,
+    deleteMutation.isPending,
+    formData.name,
+    formData.code,
+    formErrors.code,
+  ]);
 
   // 카테고리 선택 핸들러
   const handleSelectCategory = (category: CategoryWithChildren) => {
@@ -157,6 +220,19 @@ export default function IndexPage() {
     }
     if (!formData.code || formData.code.trim().length === 0) {
       errors.code = "유형코드를 입력해주세요.";
+    } else {
+      const flatCategories = getAllCategoriesFlat(categories);
+      const isDuplicate = flatCategories.some((cat) => {
+        const existingCode = (cat as any).code?.trim();
+        if (!existingCode) return false;
+        if (mode === "view" && selectedCategory?.id === cat.id) return false;
+        return (
+          existingCode.toLowerCase() === formData.code.trim().toLowerCase()
+        );
+      });
+      if (isDuplicate) {
+        errors.code = "유형코드가 중복됩니다.";
+      }
     }
 
     setFormErrors(errors);
@@ -355,11 +431,6 @@ export default function IndexPage() {
     );
   }
 
-  const isSubmitting =
-    createMutation.isPending ||
-    updateMutation.isPending ||
-    deleteMutation.isPending;
-
   return (
     <div className="flex flex-col h-full">
       {/* 상단 타이틀 */}
@@ -436,8 +507,14 @@ export default function IndexPage() {
                 type="text"
                 inputProps={{
                   value: formData.code,
-                  onChange: (e) =>
-                    setFormData({ ...formData, code: e.target.value }),
+                  onChange: (e) => {
+                    const newCode = e.target.value;
+                    setFormData({ ...formData, code: newCode });
+                    if (formErrors.code === "유형코드가 중복됩니다.") {
+                      setFormErrors((prev) => ({ ...prev, code: "" }));
+                    }
+                  },
+                  onBlur: handleCodeBlur,
                 }}
                 error={formErrors.code}
               />
@@ -571,14 +648,20 @@ export default function IndexPage() {
 
               {/* 버튼 그룹: 저장(좌) / 삭제(우) */}
               <div className="flex justify-between items-center">
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "저장 중..." : "저장"}
+                <Button type="submit" disabled={isSaveDisabled}>
+                  {createMutation.isPending || updateMutation.isPending
+                    ? "저장 중..."
+                    : "저장"}
                 </Button>
                 {mode === "view" && selectedCategory && (
                   <Button
                     type="button"
                     variant="destructive"
-                    disabled={isSubmitting}
+                    disabled={
+                      createMutation.isPending ||
+                      updateMutation.isPending ||
+                      deleteMutation.isPending
+                    }
                     onClick={handleDelete}
                   >
                     {deleteMutation.isPending ? "삭제 중..." : "삭제"}
