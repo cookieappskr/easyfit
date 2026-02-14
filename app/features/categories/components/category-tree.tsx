@@ -72,7 +72,9 @@ export default function CategoryTree({
                   <ChevronRight className="w-4 h-4" />
                 )}
               </button>
-              <span className="flex-1 truncate">{category.name}</span>
+              <span className="flex-1 truncate">
+                [{category.id}] {category.name}
+              </span>
               {childrenCount > 0 && (
                 <Badge variant="outline" className="text-xs">
                   {childrenCount}
