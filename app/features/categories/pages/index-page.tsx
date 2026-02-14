@@ -4,7 +4,12 @@ import * as React from "react";
 import type { Route } from "./+types/index-page";
 
 // Hooks
-import { useCategories, useCreateCategory, useUpdateCategory } from "../hooks";
+import {
+  useCategories,
+  useCreateCategory,
+  useUpdateCategory,
+  useDeleteCategory,
+} from "../hooks";
 import type { CategoryWithChildren } from "../queries";
 
 // Loader: 빈 loader (React Router 7 필수)
@@ -32,6 +37,7 @@ export default function IndexPage() {
   const { data: categories = [], isLoading, error } = useCategories();
   const createMutation = useCreateCategory();
   const updateMutation = useUpdateCategory();
+  const deleteMutation = useDeleteCategory();
 
   // 상태
   const [selectedCategory, setSelectedCategory] =
@@ -267,6 +273,41 @@ export default function IndexPage() {
     }
   };
 
+  // 삭제 핸들러
+  const handleDelete = () => {
+    if (!selectedCategory || mode !== "view") return;
+    if (
+      !window.confirm(
+        "선택한 항목과 하위 항목이 모두 삭제됩니다. 항목을 삭제하시겠습니까?"
+      )
+    ) {
+      return;
+    }
+    deleteMutation.mutate(selectedCategory.id, {
+      onSuccess: () => {
+        setFormErrors({});
+        setSelectedCategory(null);
+        setMode("view");
+        setFormData({
+          name: "",
+          code: "",
+          displayOrder: 0,
+          additionalAttribute1: "",
+          additionalAttribute2: "",
+          additionalAttribute3: "",
+          additionalAttribute4: "",
+          additionalAttribute5: "",
+          isActive: true,
+        });
+      },
+      onError: (error) => {
+        setFormErrors({
+          general: error.message || "삭제 중 오류가 발생했습니다.",
+        });
+      },
+    });
+  };
+
   // 로딩 상태
   if (isLoading) {
     return (
@@ -310,7 +351,10 @@ export default function IndexPage() {
     );
   }
 
-  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+  const isSubmitting =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending;
 
   return (
     <div className="flex flex-col h-full">
@@ -511,6 +555,9 @@ export default function IndexPage() {
                 </div>
               </div>
 
+              {/* 구분선 */}
+              <hr className="border-border" />
+
               {/* 일반 에러 메시지 */}
               {formErrors.general && (
                 <p className="text-sm text-destructive" role="alert">
@@ -518,11 +565,21 @@ export default function IndexPage() {
                 </p>
               )}
 
-              {/* 저장 버튼 */}
-              <div className="flex justify-end">
+              {/* 버튼 그룹: 저장(좌) / 삭제(우) */}
+              <div className="flex justify-between items-center">
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? "저장 중..." : "저장"}
                 </Button>
+                {mode === "view" && selectedCategory && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={isSubmitting}
+                    onClick={handleDelete}
+                  >
+                    {deleteMutation.isPending ? "삭제 중..." : "삭제"}
+                  </Button>
+                )}
               </div>
             </form>
           ) : (

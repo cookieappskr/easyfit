@@ -115,6 +115,55 @@ export const createCategory = async (
 };
 
 /**
+ * 선택한 항목 및 모든 하위 항목의 ID 수집 (삭제 순서: 리프 노드 우선)
+ */
+const collectSubtreeIdsForDeletion = (
+  allCategories: { id: number; parent_id: number | null }[],
+  rootId: number
+): number[] => {
+  const idToParent = new Map(
+    allCategories.map((c) => [c.id, c.parent_id] as [number, number | null])
+  );
+  const idsToDelete: number[] = [];
+  const collect = (id: number) => {
+    idsToDelete.push(id);
+    allCategories
+      .filter((c) => c.parent_id === id)
+      .forEach((c) => collect(c.id));
+  };
+  collect(rootId);
+  // 자식 → 부모 순으로 삭제 (역순)
+  return idsToDelete.reverse();
+};
+
+/**
+ * 카테고리 및 모든 하위 항목 삭제
+ */
+export const deleteCategoryWithDescendants = async (
+  client: SupabaseClient<Database>,
+  categoryId: number
+): Promise<void> => {
+  const { data: allData } = await client
+    .from("categories")
+    .select("id, parent_id");
+
+  if (!allData) {
+    throw new Error("카테고리 목록을 불러올 수 없습니다.");
+  }
+
+  const idsToDelete = collectSubtreeIdsForDeletion(allData, categoryId);
+
+  for (const id of idsToDelete) {
+    const { error } = await client.from("categories").delete().eq("id", id);
+
+    if (error) {
+      console.error(error);
+      throw new Error(error.message);
+    }
+  }
+};
+
+/**
  * 카테고리 수정
  */
 export const updateCategory = async (
