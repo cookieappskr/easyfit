@@ -14,7 +14,7 @@ const menus = [
     isAuthMenu: false,
   },
   {
-    name: "부하플랜관리",
+    name: "운동강도관리",
     to: "/plans",
     isAuthMenu: false,
   },

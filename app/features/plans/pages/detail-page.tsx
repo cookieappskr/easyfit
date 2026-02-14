@@ -109,6 +109,7 @@ export default function DetailPage() {
   const [llmModelCode, setLlmModelCode] = React.useState("");
   const [basePrompt, setBasePrompt] = React.useState(DEFAULT_BASE_PROMPT);
   const [outputFormat, setOutputFormat] = React.useState(DEFAULT_OUTPUT_FORMAT);
+  const [isActive, setIsActive] = React.useState(false);
 
   // 에러 상태
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -120,11 +121,13 @@ export default function DetailPage() {
       setLlmModelCode(prompt.llm_model_code);
       setBasePrompt(prompt.base_prompt);
       setOutputFormat(prompt.output_format);
+      setIsActive(prompt.is_active);
     } else if (isNew) {
       setTitle("");
       setLlmModelCode("");
       setBasePrompt(DEFAULT_BASE_PROMPT);
       setOutputFormat(DEFAULT_OUTPUT_FORMAT);
+      setIsActive(false);
     }
   }, [prompt, isNew]);
 
@@ -171,21 +174,30 @@ export default function DetailPage() {
       llm_model_code: llmModelCode,
       base_prompt: basePrompt.trim(),
       output_format: outputFormat.trim(),
-      is_active: false, // 기본값은 비활성화
+      is_active: isNew ? false : isActive, // 새로 생성할 때는 false, 수정할 때는 기존 값 유지
     };
 
     try {
       if (isNew) {
         await createMutation.mutateAsync(payload);
       } else {
-        await updateMutation.mutateAsync({
+        const result = await updateMutation.mutateAsync({
           id: promptId!,
           updates: payload,
         });
+        // 업데이트 결과 확인
+        if (!result) {
+          throw new Error("업데이트에 실패했습니다. 데이터가 반환되지 않았습니다.");
+        }
       }
       navigate("/plans");
     } catch (error) {
       console.error("저장 실패:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "저장 중 오류가 발생했습니다. 다시 시도해주세요.";
+      alert(errorMessage);
     }
   };
 

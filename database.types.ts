@@ -18,6 +18,9 @@ export type Database = {
         Row: {
           additional_attribute1: string | null
           additional_attribute2: string | null
+          additional_attribute3: string | null
+          additional_attribute4: string | null
+          additional_attribute5: string | null
           code: string
           created_at: string
           description: string | null
@@ -31,6 +34,9 @@ export type Database = {
         Insert: {
           additional_attribute1?: string | null
           additional_attribute2?: string | null
+          additional_attribute3?: string | null
+          additional_attribute4?: string | null
+          additional_attribute5?: string | null
           code: string
           created_at?: string
           description?: string | null
@@ -44,6 +50,9 @@ export type Database = {
         Update: {
           additional_attribute1?: string | null
           additional_attribute2?: string | null
+          additional_attribute3?: string | null
+          additional_attribute4?: string | null
+          additional_attribute5?: string | null
           code?: string
           created_at?: string
           description?: string | null

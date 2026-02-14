@@ -21,6 +21,9 @@ export const categories = pgTable(
     display_order: integer().notNull().default(0), // 표시순서
     additional_attribute1: text(), // 부가속성1
     additional_attribute2: text(), // 부가속성2
+    additional_attribute3: text(), // 부가속성3
+    additional_attribute4: text(), // 부가속성4
+    additional_attribute5: text(), // 부가속성5
     description: text(), // 설명 (선택사항)
     is_active: boolean().notNull().default(true), // 사용여부
     created_at: timestamp().notNull().defaultNow(),

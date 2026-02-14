@@ -46,6 +46,9 @@ export default function IndexPage() {
     displayOrder: 0,
     additionalAttribute1: "",
     additionalAttribute2: "",
+    additionalAttribute3: "",
+    additionalAttribute4: "",
+    additionalAttribute5: "",
     isActive: true,
   });
   const [formErrors, setFormErrors] = React.useState<Record<string, string>>(
@@ -62,6 +65,9 @@ export default function IndexPage() {
       displayOrder: (category as any).display_order || 0,
       additionalAttribute1: (category as any).additional_attribute1 || "",
       additionalAttribute2: (category as any).additional_attribute2 || "",
+      additionalAttribute3: (category as any).additional_attribute3 || "",
+      additionalAttribute4: (category as any).additional_attribute4 || "",
+      additionalAttribute5: (category as any).additional_attribute5 || "",
       isActive: category.is_active,
     });
     setFormErrors({});
@@ -96,6 +102,9 @@ export default function IndexPage() {
         displayOrder: maxOrder + 1,
         additionalAttribute1: "",
         additionalAttribute2: "",
+        additionalAttribute3: "",
+        additionalAttribute4: "",
+        additionalAttribute5: "",
         isActive: true,
       });
       setFormErrors({});
@@ -108,6 +117,9 @@ export default function IndexPage() {
       displayOrder: ((selectedCategory as any).display_order || 0) + 1,
       additionalAttribute1: "",
       additionalAttribute2: "",
+      additionalAttribute3: "",
+      additionalAttribute4: "",
+      additionalAttribute5: "",
       isActive: true,
     });
     setFormErrors({});
@@ -123,6 +135,9 @@ export default function IndexPage() {
       displayOrder: 0,
       additionalAttribute1: "",
       additionalAttribute2: "",
+      additionalAttribute3: "",
+      additionalAttribute4: "",
+      additionalAttribute5: "",
       isActive: true,
     });
     setFormErrors({});
@@ -156,6 +171,9 @@ export default function IndexPage() {
         display_order: formData.displayOrder,
         additional_attribute1: formData.additionalAttribute1 || null,
         additional_attribute2: formData.additionalAttribute2 || null,
+        additional_attribute3: formData.additionalAttribute3 || null,
+        additional_attribute4: formData.additionalAttribute4 || null,
+        additional_attribute5: formData.additionalAttribute5 || null,
         description: "",
         is_active: formData.isActive,
       };
@@ -190,6 +208,9 @@ export default function IndexPage() {
         display_order: formData.displayOrder,
         additional_attribute1: formData.additionalAttribute1 || null,
         additional_attribute2: formData.additionalAttribute2 || null,
+        additional_attribute3: formData.additionalAttribute3 || null,
+        additional_attribute4: formData.additionalAttribute4 || null,
+        additional_attribute5: formData.additionalAttribute5 || null,
         description: "",
         is_active: formData.isActive,
       };
@@ -205,6 +226,9 @@ export default function IndexPage() {
             displayOrder: 0,
             additionalAttribute1: "",
             additionalAttribute2: "",
+            additionalAttribute3: "",
+            additionalAttribute4: "",
+            additionalAttribute5: "",
             isActive: true,
           });
         },
@@ -282,7 +306,7 @@ export default function IndexPage() {
               onClick={handleAddSibling}
               disabled={mode === "add-sibling"}
             >
-              + 동일레벨
+              + 이 단계에 추가
             </Button>
             <Button
               type="button"
@@ -291,7 +315,7 @@ export default function IndexPage() {
               onClick={handleAddChild}
               disabled={!selectedCategory || mode === "add-child"}
             >
-              + 하위레벨
+              + 하위 단계 추가
             </Button>
           </div>
 
@@ -326,10 +350,6 @@ export default function IndexPage() {
                   value: formData.name,
                   onChange: (e) =>
                     setFormData({ ...formData, name: e.target.value }),
-                  readOnly:
-                    mode === "view" && (selectedCategory as any)?.code
-                      ? true
-                      : false,
                 }}
                 error={formErrors.name}
               />
@@ -344,10 +364,6 @@ export default function IndexPage() {
                   value: formData.code,
                   onChange: (e) =>
                     setFormData({ ...formData, code: e.target.value }),
-                  readOnly:
-                    mode === "view" && (selectedCategory as any)?.code
-                      ? true
-                      : false,
                 }}
                 error={formErrors.code}
               />
@@ -401,6 +417,54 @@ export default function IndexPage() {
                 error={formErrors.additionalAttribute2}
               />
 
+              {/* 부가속성3 */}
+              <FormItem
+                label="부가속성3"
+                id="additionalAttribute3"
+                type="text"
+                inputProps={{
+                  value: formData.additionalAttribute3,
+                  onChange: (e) =>
+                    setFormData({
+                      ...formData,
+                      additionalAttribute3: e.target.value,
+                    }),
+                }}
+                error={formErrors.additionalAttribute3}
+              />
+
+              {/* 부가속성4 */}
+              <FormItem
+                label="부가속성4"
+                id="additionalAttribute4"
+                type="text"
+                inputProps={{
+                  value: formData.additionalAttribute4,
+                  onChange: (e) =>
+                    setFormData({
+                      ...formData,
+                      additionalAttribute4: e.target.value,
+                    }),
+                }}
+                error={formErrors.additionalAttribute4}
+              />
+
+              {/* 부가속성5 */}
+              <FormItem
+                label="부가속성5"
+                id="additionalAttribute5"
+                type="text"
+                inputProps={{
+                  value: formData.additionalAttribute5,
+                  onChange: (e) =>
+                    setFormData({
+                      ...formData,
+                      additionalAttribute5: e.target.value,
+                    }),
+                }}
+                error={formErrors.additionalAttribute5}
+              />
+
               {/* 사용여부 */}
               <div className="space-y-2">
                 <Label htmlFor="isActive">사용여부</Label>
@@ -437,7 +501,7 @@ export default function IndexPage() {
             </form>
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
-              좌측에서 항목을 선택하거나 추가 버튼을 클릭해주세요.
+              관리할 유형을 선택하거나 새로운 유형을 등록해 보세요.
             </div>
           )}
         </div>

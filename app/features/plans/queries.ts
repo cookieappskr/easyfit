@@ -150,8 +150,13 @@ export const updatePrompt = async (
     .single();
 
   if (error) {
-    console.error(error);
+    console.error("프롬프트 업데이트 에러:", error);
     throw new Error(error.message);
+  }
+
+  if (!data) {
+    console.error("프롬프트 업데이트 실패: 데이터가 반환되지 않았습니다.");
+    throw new Error("프롬프트를 찾을 수 없거나 업데이트에 실패했습니다.");
   }
 
   return data as WorkoutPlanPrompt;

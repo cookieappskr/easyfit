@@ -30,6 +30,8 @@ export default function PromptListItem({
 
   return (
     <div
+
+
       className={cn(
         "grid grid-cols-[80px_200px_150px_1fr_120px_100px] items-center gap-4 px-4 py-3 text-sm transition-colors",
         "hover:bg-muted/40",

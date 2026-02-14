@@ -25,21 +25,20 @@ export const getUserById = async (
 ) => {
   const { data, error } = await client
     .from("profiles")
-    .select(
-      `
-        id,
-        nickname,
-        avatar,
-        role
-    `
-    )
+    .select("*")
     .eq("id", id)
     .maybeSingle();
   if (error) {
     console.error(error);
     throw new Error(error.message);
   }
-  return data;
+  if (!data) return null;
+  return {
+    id: data.id,
+    nickname: data.nickname ?? "",
+    avatar: data.avatar ?? null,
+    role: data.role ?? "user",
+  };
 };
 
 export const getLoggedInUserId = async (client: SupabaseClient<Database>) => {

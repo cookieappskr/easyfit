@@ -12,6 +12,8 @@ export const usePrompt = (id: number | null) => {
       if (!id) return null;
       return getPromptById(client, id);
     },
+
+    
     enabled: !!id && id > 0,
     staleTime: 1000 * 60 * 5, // 5분
   });

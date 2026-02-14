@@ -8,7 +8,7 @@ import type { User } from '@supabase/supabase-js'
 export interface Profile {
   id: string
   nickname: string
-  avatar: string | null
+  avatar?: string | null
   role: string
 }
 

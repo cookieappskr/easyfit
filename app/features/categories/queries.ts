@@ -7,6 +7,9 @@ export type Category = Database["public"]["Tables"]["categories"]["Row"] & {
   display_order?: number;
   additional_attribute1?: string | null;
   additional_attribute2?: string | null;
+  additional_attribute3?: string | null;
+  additional_attribute4?: string | null;
+  additional_attribute5?: string | null;
   parent_id?: number | null;
 };
 
