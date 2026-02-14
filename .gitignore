@@ -1,6 +1,7 @@
 .DS_Store
 .env
 /node_modules/
+/react-email-starter/node_modules/
 
 # React Router
 /.react-router/
